@@ -32,7 +32,7 @@ SC.m25={pal:'care',memory:true,title:'기억 · 2026년 10월 · 바다요양원
     E({id:'chair',kind:'wheel',x:8,y:3,solid:true,zb:-.3,noShadow:true}),
     E({id:'jw',kind:'char',look:LOOK.jwChair,dir:'up',sit:true,x:8,y:3,solid:false,on:async e=>{
       if(F.m25done){await nar('정우는 창밖의 불빛을 바라보며 아주 작게 웃고 있다.');return;}
-      await nar('휠체어에 앉은 노인이 창밖을 보고 있다. 아흔을 앞둔 한정우 씨.');
+      await nar('휠체어에 앉은 노인이 창밖을 보고 있다. 일흔셋의 한정우 씨.');
       await say('정우','…불 켰나?');
       await nar('대답할 사람이 없는 질문. 그는 같은 말을 몇 번이고 되풀이한다.');
       await say('서윤','(기억이… 많이 흐려지셨구나.)','sad');}}),
@@ -51,7 +51,7 @@ SC.m25={pal:'care',memory:true,title:'기억 · 2026년 10월 · 바다요양원
     E({id:'mb',kind:'table',x:11,y:3,item:'musicbox',glow:done,on:async()=>{
       if(!F.m25done){await nar('창가 탁자 위의 오르골. 금이 간 그대로다. 그래도 매일 누군가 먼지를 닦았다.');return;}
       await nar('오르골이 빛난다. 기억이 흐려지기 전으로 — 그가 아직 편지를 쓸 수 있던 해로.');
-      await deeper(0,'더 깊은 기억으로','m19',chap('제 2 장','부치지 않은 편지','2019년 11월 13일','등불리 등대 관리실'));}}),
+      await deeper(0,'더 깊은 기억으로','m19',chap('제 2 장','부치지 않은 편지','2019년 11월 13일','등불리 등대 관리실','그는 왜 편지를 부치지 않았을까?'));}}),
     E({id:'door',kind:'door',x:9,y:9,on:async()=>{await nar('복도 끝에서 저녁 배식 카트 소리가 들린다.');}}),
   ];},
   async enter(){
@@ -59,7 +59,10 @@ SC.m25={pal:'care',memory:true,title:'기억 · 2026년 10월 · 바다요양원
     await cam(136,50,1.8,10);await wait(600);await cam(null,0,1,2600);
     await say('서윤','(…바다 냄새. 소독약 냄새. 요양원이다.)');
     await say('서윤','(한 달 전. 그가 마지막 가을을 보낸 방.)');
-    await say('서윤','(오르골은 가장 가까운 기억부터 보여준다. 거꾸로, 처음을 향해.)');
+    await say('서윤','(오르골은 가장 가까운 기억부터 보여 준다. 거꾸로, 처음을 향해.)');
+    await introCard('jwChair');
+    await say('서윤','(기억 속 사람들은 나를 볼 수 없다. 나는 그날을 지켜볼 뿐, 아무것도 바꿀 수 없다.)');
+    await say('서윤','(반짝이는 것이 이 기억의 「조각」. 조각을 모두 보고 나면, 기억은 가장 중요한 장면을 보여 준다.)');
     letterbox(false);
   },
   async finale(){
@@ -149,7 +152,7 @@ SC.m19={pal:'light',memory:true,title:'기억 · 2019 · 등대 관리실',map:R
     E({id:'mb',kind:'cabinet',x:12,y:2,item:'musicbox',glow:!!F.m19done,on:async()=>{
       if(!F.m19done){await nar('선반 위의 오르골. 아직은 조용하다.');await say('서윤','(이 기억엔 아직 내가 보지 못한 것이 남아 있어.)');return;}
       await nar('오르골이 희미하게 빛나고 있다. 더 깊은 기억이 이 상자에 감겨 있다.');
-      await deeper(0,'더 깊은 기억으로','m08',chap('제 3 장','스무 걸음','2008년 5월 17일, 봄비','서울 · 은빛웨딩홀 앞'));}}),
+      await deeperI(1,'잠시 현재로 돌아가 숨을 고른다','m08',chap('제 3 장','스무 걸음','2008년 5월 17일, 봄비','서울 · 은빛웨딩홀 앞','그는 딸의 결혼식에 갔을까?'));}}),
   ];},
   async enter(){
     if(F.m19in)return;F.m19in=true;
@@ -219,7 +222,7 @@ SC.m08={pal:'street',memory:true,title:'기억 · 2008 · 은빛웨딩홀 앞',m
     E({id:'bench',kind:'bench',x:3,y:7,w:2,glow:done,on:async()=>{
       if(!F.m08done){await nar('버스 정류장 벤치. 빗물이 고여 있다.');return;}
       await nar('벤치 위에 네모난 마른 자국. 꾸러미가 놓여 있던 자리가 희미하게 빛난다.');
-      await deeper(0,'더 깊은 기억으로','m98',chap('제 4 장','불빛이 안 보인다','1998년 11월 12일 밤','등불리 시립병원 304호'));}}),
+      await deeper(0,'더 깊은 기억으로','m98',chap('제 4 장','불빛이 안 보인다','1998년 11월 12일 밤','등불리 시립병원 304호','딸은 왜 아버지를 용서하지 못했을까?'));}}),
     E({id:'bus',kind:'busstop',x:1,y:6,on:async()=>{await nar('시외버스 정류장. 「등불리행 막차 22:10」');await nar('그는 왕복표를 끊어 왔다. 처음부터, 돌아갈 생각으로.');}}),
     E({kind:'puddle',x:6,y:7,w:2,layer:0,solid:false}),E({kind:'puddle',x:11,y:8,w:1,layer:0,solid:false}),E({kind:'puddle',x:16,y:7,w:2,layer:0,solid:false}),
     catEnt('c08',1,8,'#8a8a86',false,['비에 젖은 회색 새끼 고양이가 정류장 밑에서 떨고 있다.','정우가 아까부터 우산을 조금씩 이쪽으로 기울여 주고 있었다.','이 녀석은 오늘 밤 막차를 타고 등불리로 간다. 이름은 「소금이 4세」가 된다.']),

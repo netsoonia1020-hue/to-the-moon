@@ -115,6 +115,7 @@ const PAL={
   care:{floor:['#a88a64','#a08460','#ae9068'],seam:'#806848',wallF:'#c8d4b8',wallF2:'#b8c4a8',wain:'#8a7a5a',wallT:'#3a4034'},
   hosp:{floor:['#aeb9bb','#a2adb0','#b4bfc1'],seam:'#8f9a9d',wallF:'#d5d8c8',wallF2:'#c8cbbb',wain:'#8f9a90',wallT:'#3d4448'},
   beach:{sand:'#d6b47c',sand2:'#c4a06a',sand3:'#e2c490',grass:'#6d8a48',grass2:'#5a763a',grass3:'#86a35a',water:'#3b6a8a',water2:'#6c9cba',rock:'#6a6057',rock2:'#4e463f'},
+  deck:{water:'#14233a',water2:'#3a5a7a',deck:['#6a5238','#62492f','#705638'],seam:'#3a2a1a',rail:'#d8d2c4',hull:'#7a2a2a'},
   street:{pave:'#55585f',pave2:'#4a4d54',curb:'#7a7d84',road:'#22242a',brick:'#5a3a34',brick2:'#472c28',mortar:'#33201d'},
 };
 let tileCv=null;
@@ -158,6 +159,8 @@ function buildTiles(){
     }else if(c==='p'){
       R(px,py,16,16,(x+y)%2?p.pave:p.pave2);R(px,py,16,.5,'rgba(255,255,255,.08)');R(px,py,.5,16,'rgba(0,0,0,.2)');R(px+hv%12,py+(hv>>4)%12,3,.5,'rgba(0,0,0,.18)');
       if(tileAt(x,y-1)==='B')R(px,py,16,3,'rgba(0,0,0,.3)');
+    }else if(c==='d'){for(let r=0;r<4;r++){const v=hsh(x+r*17,y);R(px,py+r*4,16,4,p.deck[v%3]);R(px,py+r*4+3.5,16,.5,p.seam);R(px+(v%14),py+r*4,.5,3.5,p.seam);}if(hv%9===0)R(px+5,py+6,2,2,'rgba(0,0,0,.3)');
+    }else if(c==='R'){R(px,py,16,16,p.hull);R(px,py,16,1,shade(p.hull,1.4));R(px,py+14,16,2,'rgba(0,0,0,.4)');R(px,py+4,16,1.5,p.rail);R(px+3,py+4,1,6,p.rail);R(px+11,py+4,1,6,p.rail);R(px,py+10,16,.5,shade(p.hull,.7));
     }else if(c==='c'){R(px,py,16,16,p.road);R(px,py,16,6,p.curb);R(px,py,16,1,'rgba(255,255,255,.2)');R(px,py+5,16,1,'rgba(0,0,0,.4)');R(px+15.5,py,.5,6,'rgba(0,0,0,.3)');}
     else if(c==='a'){R(px,py,16,16,p.road);R(px+hv%14,py+(hv>>4)%14,1.5,.5,'rgba(255,255,255,.06)');if(y===10&&x%3===0)R(px+2,py+14,10,1.5,'rgba(230,220,160,.5)');}
     else R(px,py,16,16,'#000');
@@ -165,9 +168,9 @@ function buildTiles(){
   ctx=save;
 }
 function drawAnimTiles(){
-  if(S.pal==='beach'){
-    const p=PAL.beach;
-    for(let y=8;y<ROWS;y++)for(let x=0;x<COLS;x++){
+  if(S.pal==='beach'||S.pal==='deck'){
+    const p=PAL[S.pal];
+    for(let y=S.pal==='deck'?0:8;y<ROWS;y++)for(let x=0;x<COLS;x++){
       const c=S.map[y][x],px=x*TS,py=y*TS,hv=hsh(x,y);
       if(c==='w'){for(let i=0;i<3;i++){const wx=((hv>>(i*3))%16+T*(4+i*2))%16;R(px+wx,py+3+i*5,4,.5,p.water2);R(px+(wx+7)%16,py+5+i*5,2,.5,'rgba(255,255,255,.25)');}
         if(S.sparkle&&hsh(x*5+Math.floor(T*3),y)%9===0)R(px+hv%14,py+(hv>>5)%14,1,1,'rgba(255,230,170,.8)');}
@@ -232,6 +235,14 @@ const DRAW={
   sign(e,x,y){R(x+7,y+6,2,9,'#5a4028');R(x+1,y,14,8,'#8a6a40');R(x+2,y+1,12,6,'#a8844f');R(x+3,y+2.5,10,.5,'#5a4028');R(x+3,y+4,7,.5,'#5a4028');},
   shell(e,x,y){R(x+6,y+9,4,3,'#f0c8c0');R(x+7,y+8,2,1,'#f8dcd4');R(x+7,y+10,.5,2,'#c89890');R(x+8.5,y+10,.5,2,'#c89890');},
   rockseat(e,x,y){R(x+1,y+7,14,8,'#6a6057');R(x+3,y+5,10,3,'#6a6057');R(x+3,y+6,6,1.5,'rgba(255,255,255,.15)');R(x+1,y+14,14,1,'rgba(0,0,0,.3)');},
+  // 1998 해진호
+  cabin(e,x,y){R(x,y-14,48,46,'#d8d4c8');R(x,y-14,48,3,'#f0ece0');R(x-2,y-18,52,5,'#9a3030');R(x+4,y-8,14,10,'#1a2a20');R(x+4,y-8,14,10,`rgba(120,255,140,${.25+.15*Math.sin(T*5)})`);R(x+26,y-8,16,10,'#1a2230');
+    R(x+20,y+10,10,22,'#5a4a3a');R(x+28,y+20,1.5,1.5,'#d8b450');R(x+2,y+30,44,2,'rgba(0,0,0,.35)');R(x+40,y-26,2,10,'#888');R(x+38,y-28,6,2,'#c33');},
+  mast(e,x,y){R(x+7,y-30,2,46,'#5a4630');R(x+3,y-26,10,1.5,'#5a4630');ctx.strokeStyle='rgba(220,220,200,.5)';ctx.lineWidth=.5;ctx.beginPath();ctx.moveTo(x+8,y-30);ctx.lineTo(x-16,y+14);ctx.moveTo(x+8,y-30);ctx.lineTo(x+32,y+14);ctx.stroke();
+    R(x+6,y-33,4,4,`rgba(255,${120+Math.sin(T*3)*40|0},80,.9)`);},
+  net(e,x,y){R(x+1,y+6,14,9,'#4a6a5a');for(let i=0;i<5;i++){R(x+2+i*3,y+6,.5,9,'#2a3a30');R(x+1,y+7+i*2,14,.5,'#2a3a30');}R(x+10,y+3,4,4,'#d86a30');},
+  crate(e,x,y){R(x+2,y+3,12,12,'#8a6a40');R(x+2,y+3,12,1.5,'#a88050');R(x+2,y+8.5,12,1,'#5a4428');R(x+7.5,y+3,1,12,'#5a4428');},
+  buoy(e,x,y){R(x+4,y+4,8,10,'#f0f0e8');R(x+4,y+7,8,3,'#d84838');R(x+5,y+2,6,2,'#c0c0b8');},
   // 2025 요양원
   wheel(e,x,y){R(x+2,y+4,12,3,'#4a4a52');R(x+1,y+6,2,8,'#666');R(x+13,y+6,2,8,'#666');ctx.strokeStyle='#888';ctx.lineWidth=1;ctx.beginPath();ctx.arc(x+3,y+12,4,0,7);ctx.arc(x+13,y+12,4,0,7);ctx.stroke();R(x+3,y+11.5,10,1,'#555');},
   tv(e,x,y){R(x+1,y+2,14,9,'#1a1a1e');R(x+2,y+3,12,7,`rgb(${60+Math.sin(T*3)*20|0},${80+Math.sin(T*2)*25|0},${110})`);R(x+6,y+11,4,3,'#333');R(x+3,y+14,10,1,'#222');},

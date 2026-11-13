@@ -121,10 +121,9 @@ async function endingHappy(trueEnd){
   await say('미래','…저도 하나 있어요. 부치지 못한 거.');
   await nar('봉투에는 「아빠에게 · 2008. 5. 17.」');
   await cutin('mrAdult','cry','결혼식 날 밤에 쓴 편지. 열여덟 해 동안, 가방 안쪽에.',3600);
-  SFX.page();
-  await nar('「아빠. 오늘 왔지. 가로등 밑에. 다 봤어.」');
-  await nar('「나가면 울 것 같아서 못 나갔어. 신부 화장 지워지면 안 되잖아.」');
-  await nar('「다음엔 들어와. 엄마 노래 끝, 나 알아. 들려줄게.」');
+  await say('서윤','…만져 봐도 될까요? 이 편지.');
+  await say('미래','……네.','sad');
+  await mirae2008(mr);
   await say('미래','…다음이 없을 줄은 몰랐어요.','cry');
   await say('서윤','(스무 걸음. 두 사람은 같은 밤, 같은 문을 사이에 두고 똑같이 편지를 썼다.)','sad');
   if(trueEnd){
@@ -197,6 +196,39 @@ async function endingHappy(trueEnd){
   }
   await wait(1500);
   await playSeq([...MOTIF,...CONT],70,(m,t)=>mbox(m,t,.18),{duckIt:false});
+}
+/* ---------- 미래의 장: 2008년 5월 17일 밤 (편지가 기억하는 장면) ---------- */
+SC.m08n={pal:'house',memory:true,noPlayer:true,map:["####################","####################","#####.........######","#####.........######","#####.........######","#####.........######","#####.........######","#####.........######","####################","####################","####################","####################"],
+  dark:.5,darkC:'8,10,26',tint:'rgba(150,140,220,.16)',bgm:'reveal',amb:'rain',start:[0,0,'down'],port:{'미래':'mrAdult'},
+  lights(){return [{x:7*16+8,y:3*16,r:56,c:'255,210,150'}];},
+  ents(){return [E({kind:'window',x:9,y:1,w:2,view:'rain',curt:'#8a8ab0',shaft:'130,150,220',layer:0,wallDeco:true}),
+    E({id:'desk',kind:'desk',x:6,y:3,w:2}),E({id:'mr',kind:'char',look:LOOK.mrAdult,dir:'up',x:7,y:4,solid:false}),
+    E({kind:'bed',x:11,y:3,h:2,blanket:'#e8d8e0'}),E({kind:'cabinet',x:12,y:2,item:'vase'}),E({kind:'rack',x:6,y:6})];}};
+async function mirae2008(mr){
+  const keep={x:P.x,y:P.y,dir:P.dir};hideDialog();SFX.whoosh();await setOp($('fader'),1,900);
+  await cardShow(chap('미 래 의 장','같은 밤, 다른 방','2008년 5월 17일 밤','서울 · 신혼집','그 밤, 미래는 무엇을 했을까?'),500);
+  $('fader').style.transition='none';$('fader').style.opacity=0;
+  loadScene('m08n');letterbox(true);await wait(2600);await cardHide(1200);
+  const m=ent('mr');await camOn(m,1.8,1400);
+  await nar('결혼식이 끝난 밤. 빗소리. 미래는 화장도 지우지 않은 채 책상 앞에 앉아 있다.');
+  await say('미래','(…가로등 밑에 서 있었지. 우산 들고.)');
+  await say('미래','(문까지 스무 걸음이었는데.)');
+  SFX.page();await nar('그녀는 편지지를 꺼내, 한 글자씩 꾹꾹 눌러 적는다.');
+  await nar('「아빠. 오늘 왔지. 가로등 밑에. 다 봤어.」');
+  await nar('「나가면 울 것 같아서 못 나갔어. 신부 화장 지워지면 안 되잖아.」');
+  await say('미래','(…아니야. 사실은 무서웠어. 나갔는데 아빠가 또 등대로 돌아가 버릴까 봐.)','cry');
+  await nar('「엄마 노래 끝, 나 알아. 아빠가 등대에 있던 밤마다 엄마가 불러 줬어.」');
+  await nar('「다음엔 들어와. 들려줄게.」');
+  hideDialog();m.dir='right';await wait(700);
+  await nar('휴대폰 화면에 「아빠」. 통화 버튼 위에서 엄지가 오래 멈춘다.');
+  await say('미래','…………','sad');
+  await nar('그녀는 휴대폰을 엎어 두었다. 편지는 봉투에 넣어, 가방 가장 안쪽에.');
+  await nar('그 「다음」은, 열여덟 해 동안 오지 않았다.');
+  hideDialog();m.dir='up';await hum(MOTIF.concat(CONT.slice(0,4)),60,m);
+  SFX.whoosh();await setOp($('fader'),1,900);
+  loadScene('present');ents.push(mr);Object.assign(P,{x:keep.x,y:keep.y,fx:keep.x,fy:keep.y,tx:keep.x,ty:keep.y,dir:'left',hidden:false});
+  playBgm(null);letterbox(true);cam(250,60,1.6,10);
+  await setOp($('fader'),0,1200);
 }
 async function rollCredits(){
   playBgm('credits');

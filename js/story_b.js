@@ -1,5 +1,5 @@
 'use strict';
-/* 제4장 1998 병실 · 제5장 폭풍 · 제6장 1985 · 제7장 1978 · 제8장 1976 */
+/* 제4장 1998 병실 · 제5장 폭풍 · 제6장 서윤의 장 · 제7장 1989 · 제7장 1978 · 제8장 1976 */
 /* =========================================================
    기억 3 — 1998 병실
    ========================================================= */
@@ -51,13 +51,15 @@ SC.m98={pal:'hosp',memory:true,title:'기억 · 1998 · 병실 304호',map:HOSP_
       if(!F.m98done){await nar('병실 문. 복도 끝에서 비상등이 깜빡인다.');return;}
       await nar('정우가 나간 문. 문틈으로, 코트 주머니 속 오르골의 기척이 멀어져 간다.');
       await nar('— 따라가면, 이 밤의 나머지를 보게 될 것이다.');
-      await deeper(0,'오르골을 따라간다','mstorm',chap('제 5 장','폭풍의 등대','1998년 11월 13일, 새벽 1시 30분','등불리 등대 꼭대기 · 등명실'));}}),
+      await deeper(0,'오르골을 따라간다','mstorm',chap('제 5 장','폭풍의 등대','1998년 11월 13일, 새벽 1시 30분','등불리 등대 꼭대기 · 등명실','그 밤, 등대에서는 무슨 일이 있었을까?'));}}),
   ];},
   async enter(){
     if(F.m98in)return;F.m98in=true;
     await wait(400);
     await say('서윤','(병실… 창밖은 폭풍이다.)');
     await say('서윤','(벽시계가 멈춘 그 새벽의, 몇 시간 전.)');
+    await introCard('ehMid');
+    await say('서윤','(은하 씨. 오르골에 이름이 새겨져 있던 사람. 미래 씨의 엄마.)');
   },
   async finale(){
     const jw=ent('jw'),mr=ent('mr'),door=ent('door');
@@ -134,7 +136,7 @@ SC.mstorm={pal:'lamp',memory:true,title:'기억 · 1998년 11월 13일 새벽 ·
       if(!F.stdone){await nar('아래로 내려가는 철계단. 젖은 발자국이 이어져 있다.');return;}
       await nar('계단참에 떨어진 오르골. 금 간 원통 틈으로 오래된 빛이 샌다.');
       await nar('— 상자가 처음 노래하던 날의 기억이, 그 틈으로 흘러나온다.');
-      await deeper(0,'더 깊은 기억으로','m85',chap('제 6 장','점등','1985년 8월, 해 질 녘','등불리 등대 꼭대기 · 등명실'));}}),
+      await deeperI(2,'현재로 돌아간다','mboat',chap('제 6 장','배 위의 불빛','1998년 11월 13일, 새벽 2시','해진호 갑판 — 서윤의 장','서윤은 왜 이 집에 왔을까?'));}}),
   ];},
   async enter(){
     if(F.stin)return;F.stin=true;letterbox(true);
@@ -184,10 +186,92 @@ SC.mstorm={pal:'lamp',memory:true,title:'기억 · 1998년 11월 13일 새벽 ·
     await say('서윤','(…갚을 수 없는 빚이라는 건 알아. 그래도 — 이 노래만은 끝까지 들려드릴게요.)');
     F.stdone=true;ent('hatch').glow=true;letterbox(false);
   }};
+
 /* =========================================================
-   기억 4 — 1985 등명실
+   제6장 — 서윤의 장 「배 위의 불빛」 (1998년 11월 13일 새벽, 해진호)
    ========================================================= */
-SC.m85={pal:'lamp',memory:true,title:'기억 · 1985 · 등명실',map:ROUND_MAP,dark:.06,darkC:'10,12,34',tint:'rgba(255,165,90,.22)',bgm:'m85',amb:'wind',start:[9,9,'up'],
+LOOK.cap2=Object.assign({},LOOK.fisher,{hair:'#6a6a66',top:'#2a3a4a',id:'cap2'});
+['crewA:#7a5a3a:#3a4a3a','crewB:#2a2a2a:#7a3a2a','crewC:#4a3a2a:#3a5a6a','crewD:#3a3030:#5a5a2a'].forEach(s=>{const [id,h,t]=s.split(':');LOOK[id]=Object.assign({},LOOK.fisher,{hair:h,top:t,id});});
+const BOAT_MAP=["wwwwwwwwwwwwwwwwwwww","wwwwwwwwwwwwwwwwwwww",
+"wwwwRRRRRRRRRRRRRRww","wwwRdddddddddddddRww","wwRddddddddddddddRww","wRdddddddddddddddRww","wwRddddddddddddddRww","wwwRdddddddddddddRww",
+"wwwwRRRRRRRRRRRRRRww","wwwwwwwwwwwwwwwwwwww","wwwwwwwwwwwwwwwwwwww","wwwwwwwwwwwwwwwwwwww"];
+let swayT=0;
+SC.mboat={pal:'deck',memory:true,title:'서윤의 장 · 1998년 11월 13일 새벽 · 해진호',map:BOAT_MAP,dark:.62,darkC:'2,4,14',tint:'rgba(80,110,190,.18)',bgm:'storm',amb:'storm',storm:true,weather:'rain',start:[5,5,'right'],
+  frags:['bt_tae','bt_crew','bt_cap'],port:{'태오':'taeo'},voice:{'태오':{p:.8,r:1.08},'선장':{p:.6,r:.95}},
+  lights(){return [{x:13*16+12,y:3*16-4,r:40,c:'120,255,140'},{x:7*16+8,y:4*16-30,r:30,c:'255,140,80'}];},
+  tick(dt){swayT-=dt;if(swayT<=0){swayT=3+Math.random()*3;shake(500,1.6);if(A.C)noiseBurst(A.C.currentTime,1.2,400,'lowpass',.6);}},
+  ents(){return [
+    E({id:'cabin',kind:'cabin',x:13,y:3,w:3,h:2,on:async()=>{await nar('조타실. 김 서린 유리창 너머로 무전기의 초록 불빛만 깜빡인다.');}}),
+    E({id:'mast',kind:'mast',x:7,y:4,on:async()=>{await nar('돛대 끝의 작은 등이 바람에 미친 듯이 흔들린다.');}}),
+    E({kind:'net',x:4,y:6,on:async()=>{await nar('젖은 그물 더미. 오늘 잡은 고기는 전부 바다에 도로 쏟았다. 배를 가볍게 하려고.');}}),
+    E({kind:'crate',x:10,y:6,on:async()=>{await nar('나무 상자에 「해진호 · 등불리 수협」이라고 찍혀 있다.');}}),
+    E({kind:'buoy',x:16,y:5,on:async()=>{await nar('구명 부표. 끈이 갑판 기둥에 단단히 묶여 있다.');}}),
+    E({id:'tae',kind:'char',look:LOOK.taeo,dir:'up',x:12,y:5,glow:!F.bt_tae,on:frag('bt_tae',async(e,again)=>{
+      if(again){await nar('태오는 수화기를 놓지 않는다.');return;}
+      await nar('조타실 문 앞, 무전기 수화기를 쥔 젊은 남자. 스물다섯의 서태오.');
+      await say('태오','등불리, 등불리… 여기는 해진호. 응답 바랍니다… 불빛이 안 보입니다…','surp');
+      await nar('그가 가슴 주머니에서 젖은 사진 한 장을 꺼낸다. 흑백 초음파 사진. 구석에 연필로 「윤」.');
+      await say('태오','…윤아. 아빠 꼭 간다. 아빠가 꼭 갈게.','cry');
+      await say('서윤','(…아빠.)','cry');
+      await say('서윤','(몇 번이나 들은 이야기인데. 이렇게 무서운 밤이었는지는 몰랐어.)','sad');})}),
+    E({id:'crew',kind:'char',look:LOOK.crewA,dir:'down',sit:true,x:5,y:3,solid:true,glow:!F.bt_crew,on:frag('bt_crew',async(e,again)=>{
+      if(again){await nar('막내 선원은 두 손을 모은 채 입술만 달싹인다.');return;}
+      await nar('갑판에 주저앉은 앳된 선원. 열아홉쯤 됐을까.');
+      await say('막내','엄마한테… 이번 배까지만 타고 그만둔다고 했는데.');
+      await say('막내','등대 불만 보이면 된대요. 그것만 보이면, 선장님이 집까지 데려다준대요.');
+      await say('서윤','(이 사람도 그 밤 돌아갔다. 일곱 명 중 하나로.)');})}),
+    E({kind:'char',look:LOOK.crewB,dir:'right',sit:true,x:8,y:6,on:async()=>{await say('선원','…물 퍼! 쉬지 말고 퍼!');}}),
+    E({kind:'char',look:LOOK.crewC,dir:'up',x:10,y:4,on:async()=>{await nar('중년의 선원이 어둠 속을 노려보며 등불리 쪽 방향을 손가락으로 가리키고 있다. 아무것도 보이지 않는다.');}}),
+    E({kind:'char',look:LOOK.crewD,dir:'left',sit:true,x:14,y:7,on:async()=>{await say('선원','기관장, 엔진은?');await say('선원','…죽었어. 완전히.');}}),
+    E({id:'cap',kind:'char',look:LOOK.cap2,dir:'up',x:15,y:6,glow:!F.bt_cap,on:frag('bt_cap',async(e,again)=>{
+      if(again){await nar('선장은 꺼진 나침반을 손바닥으로 덮고 있다.');return;}
+      await nar('물에 젖은 해도를 움켜쥔 박 선장.');
+      await say('선장','기관은 죽었고, 해도는 젖었고, 별도 안 보이고.');
+      await say('선장','그래도 등불리 등대는 꺼진 적이 없어. 이십 년 동안 한 번도.');
+      await say('선장','불빛 하나만 보이면 돼. 하나만.');})}),
+  ];},
+  async enter(){
+    if(F.btin)return;F.btin=true;letterbox(true);
+    flash=1;SFX.thunder();shake(800,4);await wait(900);
+    await say('서윤','(…흔들린다. 바다 위다.)','surp');
+    await say('서윤','(호루라기가 기억하는 밤. 등대가 아니라, 바다 쪽에서 본 그 밤.)');
+    await introCard('taeo');
+    await say('서윤','(아빠. …스물다섯 살의 아빠.)','sad');
+    letterbox(false);
+  },
+  async finale(){
+    const tae=ent('tae');letterbox(true);
+    await nar('바람이 잠깐 숨을 고른 순간 — 모두가 같은 쪽을 보았다.');
+    hideDialog();await wait(600);
+    await vista({mode:'storm',rain:true,beam:false},1200);
+    await nar('칠흑 같은 어둠. 아무것도 없다.');
+    hideDialog();await wait(900);
+    VIS.o={mode:'storm',rain:true,beam:true};SFX.chime();shake(400,2);
+    await nar('— 저 멀리, 빛이 한 바퀴 돌았다.');
+    await say('선장','등대다…! 등불리 불빛이다!!','surp');
+    await nar('갑판 위의 일곱 사람이 한꺼번에 소리를 질렀다. 막내 선원은 울음을 터뜨렸다.');
+    await say('정우','해진호, 여기는 등불리. 그 불빛만 보고 들어오십시오. 이상.');
+    await say('태오','여기는 해진호 통신사, 서태오입니다…! 보입니다, 불빛 보입니다!','cry');
+    await say('정우','…아이 이름은 지었습니까.');
+    await say('태오','네. 「윤」이요. 서윤.','smile');
+    await vista(null,1400);
+    await cutin('seoyun','cry','폭풍 너머의 저 불빛이, 나를 이 세상에 데려왔다.',3800);
+    playBgm('reveal');
+    hideDialog();await fadeBlack(1500);
+    S=Object.assign({},SC.title,{vista:{mode:'night',moon:true,beam:true,house:true}});ents=[];P.hidden=true;
+    await setOp($('fader'),0,1500);$('fader').style.background='#fff';
+    await cardLines(['2010년 12월. 서윤의 열두 번째 생일.','아빠는 낡은 호루라기를 목에 걸어 주었다.','「그 밤, 아빠가 목에 걸고 있던 거다. 네가 태어나기 한 달 전.」','호루라기를 쥔 순간 — 처음으로, 남의 기억이 보였다.','폭풍. 불빛. 그리고 스물다섯 살 아빠의 목소리.','그날부터 나는, 물건의 말을 듣는 아이가 되었다.'],true,2200);
+    F.btdone=true;hud();
+    await say('서윤','(그래서 이 일을 한다. 버려지기 전에, 물건의 말을 들어 주는 일.)','closed');
+    await say('서윤','(그리고 그래서 — 이 집에 왔다.)');
+    await say('서윤','(갚을 수 없는 빚이라면, 노래라도. …호루라기를 놓고, 다시 오르골에 손을 댄다.)');
+    letterbox(false);
+    await goScene('m85',chap('제 7 장','점등','1989년 8월, 해 질 녘','등불리 등대 꼭대기 · 등명실','노래의 끝은 누가 알고 있을까?'));
+  }};
+/* =========================================================
+   제7장 — 1989 등명실
+   ========================================================= */
+SC.m85={pal:'lamp',memory:true,title:'기억 · 1989년 8월 · 등명실',map:ROUND_MAP,dark:.06,darkC:'10,12,34',tint:'rgba(255,165,90,.22)',bgm:'m85',amb:'wind',start:[9,9,'up'],
   frags:['m85_mr','m85_jw','m85_eh'],voice:{'미래':{p:1.9,r:1.1},'정우':{p:.72,r:.95},'은하':{p:1.3,r:.97}},blipMul:{'미래':1.35},
   lights(){return [{x:160,y:94,r:130,c:'255,235,170',lit:1}];},
   ents(){const done=!!F.m85done;if(done){this.lit=true;curDark=.5;this.nightK=1;}else this.nightK=0;return [
@@ -206,7 +290,7 @@ SC.m85={pal:'lamp',memory:true,title:'기억 · 1985 · 등명실',map:ROUND_MAP
     E({id:'lens',kind:'lens',x:9,y:5,w:2,h:2,zb:-.4,on:async()=>{await nar('사람 키만 한 프레넬 렌즈. 수백 장의 유리가 양파처럼 겹쳐 있다.');await nar('작은 등불 하나를 20해리 밖까지 보내는 유리.');}}),
     E({id:'jw',kind:'char',look:LOOK.jw30,dir:'right',x:8,y:5,hidden:done,glow:!F.m85_jw,on:frag('m85_jw',async(e,again)=>{
       if(again){await nar('정우는 렌즈에 숨결로 김을 내고, 마른 천으로 닦는다.');return;}
-      await nar('서른둘의 정우가 렌즈를 한 장 한 장 닦고 있다.');
+      await nar('서른여섯의 정우가 렌즈를 한 장 한 장 닦고 있다.');
       await say('정우','렌즈에 소금이 끼면 불빛이 반도 못 나가.');
       await say('정우','불빛이 반밖에 못 나가면, 배도 반밖에 못 돌아오는 거야.');
       await say('서윤','(…13년 뒤 폭풍의 밤에도, 그는 똑같은 말을 한다.)');})}),
@@ -216,7 +300,7 @@ SC.m85={pal:'lamp',memory:true,title:'기억 · 1985 · 등명실',map:ROUND_MAP
       if(again){await nar('은하는 오르골 뚜껑을 열었다 닫았다 하며 웃고 있다.');return;}
       await nar('은하가 창가에 앉아 무릎 위의 작은 상자를 만지작거린다. 새 나무 냄새가 나는 오르골.');
       await say('은하','여보, 이거 진짜 당신이 만든 거야? 원통까지 손으로?');
-      await say('정우','약속했잖아. 상자에 담아 주겠다고. …9년이나 걸렸지만.');
+      await say('정우','약속했잖아. 상자에 담아 주겠다고. …13년이나 걸렸지만.');
       hideDialog();await boxPlay(MOTIF,84,{who:ent('mb')});
       await say('은하','여섯 음뿐이네.');
       await say('정우','네가 끝을 안 알려 줬잖아.');
@@ -224,7 +308,7 @@ SC.m85={pal:'lamp',memory:true,title:'기억 · 1985 · 등명실',map:ROUND_MAP
     E({id:'mb',kind:'table',x:14,y:3,item:'musicbox',glow:done,on:async()=>{
       if(!F.m85done){await nar('갓 만든 오르골. 뚜껑 안쪽의 글씨는 아직 칼자국이 선명하다. 「은하에게 — 등대에서, 정우」');return;}
       await nar('새 오르골이 빛나고 있다. 이 노래가 처음 태어난 바닷가를 가리키듯이.');
-      await deeper(0,'더 오래된 기억으로','m78',chap('제 7 장','바다 위의 결혼식','1978년 4월','등불리 등대 앞마당'));}}),
+      await deeper(0,'더 오래된 기억으로','m78',chap('제 8 장','바다 위의 결혼식','1978년 4월','등불리 등대 앞마당','두 사람은 무엇을 약속했을까?'));}}),
     E({id:'bucket',kind:'bucket',x:4,y:7,on:async()=>{await nar('파란 페인트 통. 붓 자국이 통 바깥에 더 많다.');}}),
     E({id:'mr',kind:'char',look:LOOK.mrChild,scale:.74,dir:done?'up':'left',x:done?12:5,y:done?4:7,glow:!F.m85_mr,on:frag('m85_mr',async(e,again)=>{
       if(F.m85done){await nar('미래는 엄마 무릎에 기대어 눈을 감고 있다.');return;}
@@ -305,7 +389,7 @@ SC.m78={pal:'beach',memory:true,title:'기억 · 1978년 4월 · 등대 앞마�
       await say('정우','또요? 불 안 끄는 거, 노래 상자 만드는 거…');
       await say('은하','그 노래 상자. 아무리 오래 걸려도 괜찮아요.');
       await say('은하','나는 기다리는 거, 잘하니까.','smile');
-      await say('서윤','(…9년. 그는 정말로 9년이 걸렸다.)');})}),
+      await say('서윤','(…13년. 그는 정말로 13년이 걸렸다.)');})}),
     E({id:'soon',kind:'char',look:LOOK.soon,dir:'right',sit:true,x:4,y:5,solid:false,glow:!F.m78_soon,on:frag('m78_soon',async(e,again)=>{
       if(again){await nar('은하의 어머니는 손수건을 무릎 위에서 접었다 폈다 한다.');return;}
       await nar('맨 앞줄에 앉은 노부인. 은하의 어머니, 박순례 씨.');
@@ -321,7 +405,7 @@ SC.m78={pal:'beach',memory:true,title:'기억 · 1978년 4월 · 등대 앞마�
       if(!F.m78done){await nar('모래 위의 분홍 조개. 2년 전 여름에도 이 해변에 있었던 것 같은 빛깔.');return;}
       await nar('신부가 던진 부케가 떨어진 자리. 꽃잎 사이로 2년 전 여름의 노을빛이 번진다.');
       await say('서윤','(이 노래는 상자보다 오래됐다. …이제는 상자가 아니라, 노래가 기억하고 있다.)');
-      await deeper(0,'노래가 태어난 날로','m76',chap('제 8 장','기다리는 노래','1976년 여름, 해 질 녘','등불리 해변'));}}),
+      await deeperI(3,'현재로 돌아간다','m76',chap('제 9 장','기다리는 노래','1976년 여름, 해 질 녘','등불리 해변','이 노래는 어떻게 시작되었을까?'));}}),
   ];},
   async enter(){
     if(F.m78in)return;F.m78in=true;letterbox(true);
@@ -376,6 +460,7 @@ SC.m76={pal:'beach',memory:true,title:'기억 · 1976 · 등불리 해변',map:B
     E({id:'rock',kind:'rockseat',x:8,y:8,solid:true,noShadow:true}),
     E({id:'eh',kind:'char',look:LOOK.ehYoung,dir:'down',sit:true,x:8,y:8,glow:!F.m76_eh,on:frag('m76_eh',async(e,again)=>{
       if(again){await nar('은하는 파도 소리에 맞춰 발끝을 까딱이고 있다.');return;}
+      await introCard('ehYoung');
       await nar('바위에 앉은 여자가 바다를 향해 노래를 흥얼거리고 있다.');
       hideDialog();await hum(MOTIF.slice(0,4),70,e);
       emote(P,'!');await say('서윤','(이 노래…!)');
@@ -392,6 +477,7 @@ SC.m76={pal:'beach',memory:true,title:'기억 · 1976 · 등불리 해변',map:B
     await wait(400);
     await say('서윤','(바다 냄새. 노을. …아주 오래된 기억이다.)');
     await say('서윤','(50년 전의 여름. 모든 것이 시작된 날.)');
+    await introCard('jwYoung');
   },
   async finale(){
     const jw=ent('jw'),eh=ent('eh');
@@ -422,7 +508,7 @@ SC.m76={pal:'beach',memory:true,title:'기억 · 1976 · 등불리 해변',map:B
     await say('서윤','(그는 끝내 이 노래의 끝을 듣지 못했다. 그 끝은 — 어디로 갔을까.)');
     hideDialog();
     F.phase1=true;META.best={keeps:F.keeps.slice(),cats:F.cats.slice()};saveMeta();
-    await goScene('present',chap('에 필 로 그','돌아오는 노래','2026년 11월 13일','다시, 한정우의 집'));
+    await goScene('present',chap('에 필 로 그','돌아오는 노래','2026년 11월 13일','다시, 한정우의 집','이제, 노래를 끝까지.'));
   }};
 
 

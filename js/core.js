@@ -30,6 +30,11 @@ function layout(){
   const dlg=$('dialog'),ch=$('choices');let bottom=18;
   if(isTouch){bottom=portrait?132:10;dlg.style.width=portrait?'94vw':'min(68vw,780px)';}
   dlg.style.bottom=bottom+'px';ch.style.bottom=(bottom+dlg.offsetHeight+10)+'px';
+  document.body.classList.toggle('portrait',portrait);
+  const bu=$('bust');if(bu){const bh=portrait?Math.min(vh*.26,260):Math.min(Math.max(220,vh*.5),470),bw=bh*300/380;bu.style.height=bh+'px';
+    const dr=dlg.getBoundingClientRect();bu.style.left=(portrait?12:Math.max(8,dr.left-bw*.12))+'px';
+    bu.style.bottom=(portrait?bottom+dlg.offsetHeight-12:bottom+4)+'px';document.documentElement.style.setProperty('--bustW',(portrait?0:bw*.88)+'px');}
+  const go=$('goal');if(go){go.style.left=(portrait?0:Math.max(0,l))+'px';go.style.top=(portrait?t+H*s+6:t+H*s-34)+'px';}
   const top=Math.max(t+8,44);
   $('hud').style.top=$('toast').style.top=top+'px';
   $('hud').style.right=(portrait?12:Math.max(12,l+10))+'px';$('toast').style.left=(portrait?12:Math.max(12,l+12))+'px';
@@ -214,7 +219,7 @@ const DX={up:0,down:0,left:-1,right:1},DY={up:-1,down:1,left:0,right:0};
 function E(o){return Object.assign({w:1,h:1,solid:true,hidden:false,glow:false,layer:1,ph:Math.random()*5},o,{fx:o.x,fy:o.y});}
 function ent(id){return ents.find(e=>e.id===id);}
 function covers(e,x,y){return x>=e.x&&x<e.x+e.w&&y>=e.y&&y<e.y+e.h;}
-const SOLID_T='#wrxBca';
+const SOLID_T='#wrxBcaR';
 function tileAt(x,y){if(!S||!S.map||x<0||y<0||x>=COLS||y>=ROWS)return 'x';return S.map[y][x];}
 function solidAt(x,y){if(SOLID_T.includes(tileAt(x,y)))return true;return ents.some(e=>!e.hidden&&e.solid&&covers(e,x,y));}
 
@@ -248,11 +253,9 @@ function portOf(name){return (S&&S.port&&S.port[name])||DEFAULT_PORT[name];}
 // ex(표정)를 주면 대사창에 초상화가 함께 뜬다: '', smile, sad, cry, surp, closed, angry
 async function say(name,text,ex){
   const d=$('dialog'),nm=$('dname'),tx=$('dtext'),nx=$('dnext'),pc=$('dport');
-  d.classList.remove('hidden');nx.classList.add('hidden');
+  d.classList.remove('hidden');nx.classList.add('hidden');document.body.classList.add('talking');
   nm.textContent=name||'';nm.style.color=NAMECOL[name]||'#ddd';nm.style.display=name?'':'none';
-  const pid=ex!==undefined&&name?portOf(name):null;
-  if(pid&&typeof portrait==='function'){const g=pc.getContext('2d');g.clearRect(0,0,64,64);g.drawImage(portrait(pid,ex),0,0);d.classList.add('withport');pc.classList.remove('pop');void pc.offsetWidth;pc.classList.add('pop');}
-  else d.classList.remove('withport');
+  const pid=ex!==undefined&&name?portOf(name):null;showBust(pid,ex);
   const inner=name&&text.startsWith('(');
   tx.className=!name?'narr':inner?'inner':'';tx.textContent='';layout();
   if(!inner)speak(name,text);else shutUp();
@@ -268,13 +271,47 @@ async function say(name,text,ex){
 }
 // 반전 컷인: 화면을 가로지르는 큰 초상화와 한 줄
 async function cutin(lookId,ex,line,ms=3200){
-  hideDialog();const el=$('cutin'),c=$('ciPort');c.getContext('2d').clearRect(0,0,64,64);c.getContext('2d').drawImage(portrait(lookId,ex),0,0);
+  hideDialog();const el=$('cutin'),c=$('ciPort');c.width=300;c.height=380;c.getContext('2d').clearRect(0,0,300,380);c.getContext('2d').drawImage(paintPortrait(lookId,ex),0,0);
   $('ciText').textContent=line||'';el.classList.remove('hidden','go');void el.offsetWidth;el.classList.add('go');
   if(A.C){const t=A.C.currentTime;noiseBurst(t,.6,1800,'bandpass',.35,1.5);beep(98,t,1.6,.18,'sine');}
   shake(250,2);speak('',line||'');
   await wait(ms);el.classList.remove('go');await wait(500);el.classList.add('hidden');
 }
-function chap(n,title,date,place){return `<div class="chap"><div class="cn">${n}</div><h1>${title}</h1><div class="cl"></div><p>${date}</p><p class="pl">${place}</p></div>`;}
+// 장 타이틀 카드: 연대표에서 지금 어디로 가는지 보여 주고, 이 장의 질문을 던진다
+const TL=[2026,2019,2008,1998,1989,1978,1976];
+function chap(n,title,date,place,q){
+  const y=+(date.match(/\d{4}/)||[0])[0],idx=TL.indexOf(y);
+  const tl=TL.map((v,i)=>`<span class="${i===idx?'on':i<idx?'past':''}">${v}</span>`).join('');
+  return `<div class="chap"><div class="cn">${n}</div><h1>${title}</h1><div class="cl"></div><p>${date}</p><p class="pl">${place}</p>${q?`<p class="q">${q}</p>`:''}${idx>=0?`<div class="tl"><span class="ar">◀ 과거로</span>${tl}</div>`:''}</div>`;}
+// 인물 소개 카드 (영화 오프닝처럼)
+const PEOPLE={
+  seoyun:{n:'서윤',r:'주인공 · 유품정리사 · 27세',d:'오래 사랑받은 물건에 손을 대면, 그 물건이 기억하는 장면을 본다.'},
+  mrAdult:{n:'한미래',r:'고인의 딸 · 43세',d:'아버지와 연락을 끊고 살았다. 유품은 「전부 처리해 달라」고 했다.'},
+  jwChair:{n:'한정우',r:'오르골의 주인 · 등대지기 43년',d:'등불리 등대를 평생 지켰다. 지난달, 요양원에서 세상을 떠났다.'},
+  ehMid:{n:'윤은하',r:'정우의 아내',d:'바다에서 아버지를 잃었다. 「기다리는 노래」를 만든 사람.'},
+  taeo:{n:'서태오',r:'해진호 통신사 · 25세',d:'만삭의 아내를 두고 폭풍의 바다에 나와 있다.'},
+  ehYoung:{n:'윤은하',r:'1976년 · 19세',d:'바위에 앉아, 아직 끝이 없는 노래를 부른다.'},
+  jwYoung:{n:'한정우',r:'1976년 · 23세',d:'오늘 부임한 신임 등대지기. 혼자 불을 켜 본 적은 아직 없다.'},
+};
+async function introCard(id,ms=3600){
+  const p=PEOPLE[id];if(!p)return;hideDialog();if(!F.met)F.met=[];if(!F.met.includes(id))F.met.push(id);
+  const c=$('inPort'),g=c.getContext('2d');g.clearRect(0,0,300,380);g.drawImage(paintPortrait(id,id==='mrAdult'?'sad':''),0,0);
+  $('inRole').textContent=p.r;$('inName').textContent=p.n;$('inDesc').textContent=p.d;
+  const el=$('intro');el.classList.remove('hidden');void el.offsetWidth;el.classList.add('on');
+  if(A.C){const t=A.C.currentTime;mbox(76,t,.1);mbox(83,t+.18,.08);}speak('',p.n+'. '+p.d);
+  await wait(ms);el.classList.remove('on');await wait(600);el.classList.add('hidden');
+}
+// 기억 일지: 지금까지 만난 사람과 본 기억
+function openJournal(){
+  if(!started||locked&&!choice)return toast('대화가 끝난 뒤에 열 수 있어요');
+  const j=$('jBody');let h='<h3>등장인물</h3>';
+  for(const id of (F.met||[])){const p=PEOPLE[id];if(!p)continue;h+=`<div class="jp" data-id="${id}"><canvas width="300" height="380"></canvas><div><div class="n">${p.n} <small style="color:#998">${p.r}</small></div><div class="d">${p.d}</div></div></div>`;}
+  h+='<h3>기억 연대표 — 오르골은 가장 최근의 기억부터 보여 준다</h3>';
+  for(const c of (typeof CH!=='undefined'?CH:[])){const done=c.done&&F[c.done];h+=`<div class="jt ${done?'':'lock'}"><div class="y">${c.y}</div><div class="tt">${done?c.t:'???'}</div>${done?`<div class="s">${c.s}</div>`:''}</div>`;}
+  j.innerHTML=h;j.querySelectorAll('.jp').forEach(e=>e.querySelector('canvas').getContext('2d').drawImage(paintPortrait(e.dataset.id,''),0,0));
+  const pn=$('journal');pn.classList.remove('hidden');const close=()=>{pn.classList.add('hidden');panelKeys=null;};$('jClose').onclick=close;panelKeys=k=>{if(k==='esc'||k==='enter')close();};
+}
+$('oBook').onclick=e=>{e.stopPropagation();openJournal();};
 // 미니게임 1: 연타 게이지
 function mashGame(title,desc,{need=1,gain=.075,decay=.16,btn='힘주기'}={}){
   return new Promise(res=>{
@@ -314,7 +351,16 @@ async function credits(lines,ms=26000){
   await wait(ms);el.classList.add('hidden');
 }
 const nar=t=>say('',t);
-function hideDialog(){$('dialog').classList.add('hidden');shutUp();}
+function hideDialog(){$('dialog').classList.add('hidden');document.body.classList.remove('talking');shutUp();showBust(null);}
+// 큰 일러스트 초상화: 대사창 위에 선다
+let bustKey='';
+function showBust(pid,ex){
+  const b=$('bust'),d=$('dialog');
+  if(!pid||typeof paintPortrait!=='function'){b.classList.remove('on');d.classList.remove('withbust');bustKey='';return;}
+  const k=pid+ex;if(k!==bustKey){const g=b.getContext('2d');g.clearRect(0,0,300,380);g.drawImage(paintPortrait(pid,ex),0,0);
+    if(bustKey){b.classList.remove('swap');void b.offsetWidth;b.classList.add('swap');}bustKey=k;}
+  b.classList.add('on');d.classList.toggle('withbust',!document.body.classList.contains('portrait'));layout();
+}
 function choose(opts){
   return new Promise(res=>{
     const el=$('choices');el.innerHTML='';
@@ -338,6 +384,7 @@ function hud(){
   if(F.keeps.length)s+=`♥ 미래의 조각 ${F.keeps.length}/6<br>`;
   if(F.cats.length)s+=`🐱 ${F.cats.length}/5`;
   h.innerHTML=s;
+  const g=$('goal');if(g){const t=S?(S.goal?S.goal():(typeof defGoal==='function'&&S.frags?defGoal():'')):'';g.textContent=t?'▸ '+t:'';g.style.opacity=t?1:0;}
 }
 async function addNotes(ns){F.notes.push(...ns);hud();SFX.chime();sparkFx(P.fx*TS+8,P.fy*TS,14);toast('♪ 음의 조각을 얻었다 — '+ns.map(m=>NOTE_NAME[m]).join(' · '),4500);await wait(900);}
 function keep(id,label){if(F.keeps.includes(id))return;F.keeps.push(id);SFX.keep();sparkFx(P.fx*TS+8,P.fy*TS,10,'255,170,190');hud();toast(`♥ 미래의 조각 — ${label} (${F.keeps.length}/6)`,4500);}
@@ -347,7 +394,7 @@ function hop(e,n=2){e.hop=n*.3;return wait(n*300);}
 async function run(fn){
   if(locked)return;locked=true;
   try{await fn();}catch(err){console.error(err);}
-  hideDialog();locked=false;autosave();
+  hideDialog();locked=false;autosave();hud();
 }
 function frag(id,fn){
   return async e=>{
@@ -367,10 +414,10 @@ function loadScene(name){
   PT.length=0;FP.length=0;EM.length=0;CAM.x=W/2;CAM.y=H/2;CAM.z=1;CAM.a=null;LB.t=0;VIS.ta=0;VIS.a=0;
   if(S.map)buildTiles();
   playBgm(S.bgm);setAmb(S.amb);hud();
-  if(name!=='title'&&!F.ended)store.set('lhmb_save',snapshot());
+  if(SCENE_LABEL[name]&&!F.ended)store.set('lhmb_save',snapshot());
 }
 /* ---------- 저장 ---------- */
-const SCENE_LABEL={present:'현재 · 한정우의 집',m19:'기억 · 2019 등대 관리실',m08:'기억 · 2008 예식장 앞',m98:'기억 · 1998 병실',m85:'기억 · 1985 등명실',m76:'기억 · 1976 해변'};
+const SCENE_LABEL={present:'현재 · 한정우의 집',m25:'제1장 · 2026 요양원',m19:'제2장 · 2019 등대 관리실',m08:'제3장 · 2008 예식장 앞',m98:'제4장 · 1998 병실',mstorm:'제5장 · 1998 폭풍의 등대',mboat:'제6장 · 서윤의 장',m85:'제7장 · 1989 등명실',m78:'제8장 · 1978 결혼식',m76:'제9장 · 1976 해변'};
 function snapshot(){return {v:2,scene:sceneName,F:JSON.parse(JSON.stringify(F)),pos:[P.x,P.y,P.dir],t:Date.now()};}
 function canSave(){return started&&S&&S.map&&SCENE_LABEL[sceneName]&&!F.ended;}
 function autosave(){if(canSave()&&!locked)store.set('lhmb_save',snapshot());}
