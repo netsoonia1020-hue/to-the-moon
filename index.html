@@ -21,24 +21,22 @@
 <div id="dialog" class="hidden"><canvas id="dport" width="64" height="64"></canvas><div id="dname"></div><div id="dtext"></div><div id="dnext" class="hidden">▼</div></div>
 <div id="choices" class="hidden"></div>
 <div id="puzzle" class="panel hidden">
-  <div class="t">오르골 원통 — 핀 꽂기</div>
+  <div class="t">오르골 원통 — 핀 꽂기<button id="pzClose" class="x" aria-label="닫기">✕</button></div>
   <div class="h">세로줄 하나에 핀 하나. 왼쪽부터 차례로 울립니다.<br>기억 속에서 들은 순서대로 꽂으세요. 칸을 누르면 그 음이 들립니다.<br>낡은 원통이 버틸 수 있는 태엽: <b id="pzTries"></b></div>
   <div id="pzGrid"></div>
-  <div class="pzb"><button id="pzPlay">태엽 감기 ▶</button><button id="pzClear">초기화</button><button id="pzClose">닫기</button></div>
+  <div class="pzb"><button id="pzPlay">태엽 감기 ▶</button><button id="pzClear">초기화</button></div>
   <div id="pzMsg"></div>
 </div>
 <div id="piano" class="panel hidden">
-  <div class="t">낡은 피아노</div>
+  <div class="t">낡은 피아노<button id="pnClose" class="x" aria-label="닫기">✕</button></div>
   <div class="h">건반을 누르거나 숫자키 1–7로 연주합니다. (Esc: 닫기)</div>
   <div id="pnKeys"></div>
-  <div class="pzb"><button id="pnClose">닫기</button></div>
   <div id="pnMsg"></div>
 </div>
 <div id="saves" class="panel hidden">
-  <div class="t" id="svTitle">저장 / 불러오기</div>
+  <div class="t"><span id="svTitle">저장 / 불러오기</span><button id="svClose" class="x" aria-label="닫기">✕</button></div>
   <div class="h" id="svHint"></div>
   <div id="svList"></div>
-  <div class="pzb"><button id="svClose">닫기</button></div>
   <div id="svMsg"></div>
 </div>
 <div id="touch" class="hidden"><div class="tb" id="tA">조사</div></div>
@@ -49,8 +47,9 @@
   <div class="pzb" id="mnBtns"></div></div>
 <div id="cutin" class="hidden"><div class="band"><canvas id="ciPort" width="64" height="64"></canvas><div id="ciText"></div></div></div>
 <div id="intro" class="hidden"><canvas id="inPort" width="300" height="380"></canvas><div class="it"><div id="inRole"></div><div id="inName"></div><div id="inDesc"></div></div></div>
-<div id="journal" class="panel hidden"><div class="t">기억 일지</div><div id="jBody"></div><div class="pzb"><button id="jClose">닫기</button></div></div>
+<div id="journal" class="panel hidden"><div class="t">기억 일지<button id="jClose" class="x" aria-label="닫기">✕</button></div><div id="jBody"></div></div>
 <div id="credits" class="hidden"><div id="crIn"></div></div>
+<div id="scrim"></div>
 <div id="fader"></div>
 <div id="card"></div>
 <div id="title">

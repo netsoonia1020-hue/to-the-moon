@@ -156,3 +156,14 @@ html,body{margin:0;height:100%;background:#05060a;overflow:hidden;color:#eee;
 .tl .ar{border:none;color:#f2c46d}
 
 body.talking #goal{opacity:0!important}
+
+/* 패널 공통: 제목줄 오른쪽 ✕, 뒤 배경 어둡게, 부드럽게 등장 */
+.panel .t{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.panel .x{flex:none;width:34px;height:34px;border-radius:50%;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.06);color:#eee;font-size:16px;line-height:1;cursor:pointer;transition:background .15s,transform .15s}
+.panel .x:hover{background:rgba(255,255,255,.18);transform:rotate(90deg)}
+.panel{animation:panelIn .28s cubic-bezier(.2,.8,.2,1)}
+@keyframes panelIn{from{opacity:0;transform:translate(-50%,-46%) scale(.97)}to{opacity:1;transform:translate(-50%,-50%)}}
+#scrim{position:fixed;inset:0;background:rgba(4,6,14,.55);backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px);opacity:0;pointer-events:none;transition:opacity .25s;z-index:14}
+body:has(.panel:not(.hidden)) #scrim{opacity:1}
+#journal .t{position:sticky;top:-18px;margin:-18px -20px 8px;padding:16px 20px 12px;background:rgba(14,12,10,.98);border-bottom:1px solid rgba(138,109,59,.5);z-index:1}
+#saves .t{margin-bottom:6px}
