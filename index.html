@@ -15,7 +15,7 @@
 <div id="hud"></div>
 <div id="hint">방향키 / WASD 이동 · Space / Enter 조사</div>
 <div id="opts"><button id="oSnd">🔊 소리</button><button id="oVoice">🗣 음성</button><button id="oSave">💾 저장</button></div>
-<div id="dialog" class="hidden"><div id="dname"></div><div id="dtext"></div><div id="dnext" class="hidden">▼</div></div>
+<div id="dialog" class="hidden"><canvas id="dport" width="64" height="64"></canvas><div id="dname"></div><div id="dtext"></div><div id="dnext" class="hidden">▼</div></div>
 <div id="choices" class="hidden"></div>
 <div id="puzzle" class="panel hidden">
   <div class="t">오르골 원통 — 핀 꽂기</div>
@@ -38,13 +38,14 @@
   <div class="pzb"><button id="svClose">닫기</button></div>
   <div id="svMsg"></div>
 </div>
-<div id="touch" class="hidden">
-  <div class="tb" data-d="up" style="left:78px;bottom:126px">▲</div>
-  <div class="tb" data-d="left" style="left:12px;bottom:64px">◀</div>
-  <div class="tb" data-d="right" style="left:144px;bottom:64px">▶</div>
-  <div class="tb" data-d="down" style="left:78px;bottom:2px">▼</div>
-  <div class="tb" id="tA">조사</div>
-</div>
+<div id="touch" class="hidden"><div class="tb" id="tA">조사</div></div>
+<div id="joy"><div id="joyK"></div></div>
+<div id="mini" class="panel hidden"><div class="t" id="mnT"></div><div class="h" id="mnH"></div>
+  <div id="mnBarW"><div id="mnBar"></div></div>
+  <div id="mnDial" class="hidden"><div id="mnScale"></div><div id="mnNeedle"></div><div id="mnSigW"><div id="mnSig"></div></div></div>
+  <div class="pzb" id="mnBtns"></div></div>
+<div id="cutin" class="hidden"><div class="band"><canvas id="ciPort" width="64" height="64"></canvas><div id="ciText"></div></div></div>
+<div id="credits" class="hidden"><div id="crIn"></div></div>
 <div id="fader"></div>
 <div id="card"></div>
 <div id="title">
@@ -52,11 +53,16 @@
   <div class="sub">어느 유품정리사가 본, 여섯 음의 기억</div>
   <div id="menu"></div>
   <div id="gallery"></div>
-  <div class="small">소리를 켜고 플레이하세요 (아이폰은 무음 스위치 해제) · 약 30분 · 엔딩 5개</div>
+  <div class="small">소리를 켜고 플레이하세요 (아이폰은 무음 스위치 해제) · 약 1시간 · 8장 · 엔딩 5개</div>
 </div>
 <div id="endcard" class="hidden"><div class="tag" id="endTag"></div><h1 id="endTitle"></h1><p id="endDesc"></p><p id="endProg"></p><button id="restart">타이틀로</button></div>
 <script src="js/core.js"></script>
+<script src="js/music.js"></script>
 <script src="js/art.js"></script>
+<script src="js/portrait.js"></script>
 <script src="js/scenes.js"></script>
+<script src="js/story_a.js"></script>
+<script src="js/story_b.js"></script>
+<script src="js/ending.js"></script>
 </body>
 </html>
