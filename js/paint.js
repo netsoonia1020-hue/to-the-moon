@@ -97,9 +97,10 @@ function pixBust(id,ex){
   return c;
 }
 /* 수채화 초상화: img/port/<id>.jpg (표정별은 <id>_<ex>.jpg). 파일이 없는 인물은 도트 초상화로 대신한다. */
-const PIMG={},PORT_FILES=['seoyun','mrAdult','mrTeen','mrChild','mrBride','jwOld','jwChair','jwMid','jwYoung','ehMid','ehYoung','taeo'];
+const PIMG={},PORT_FILES=['seoyun','mrAdult','mrTeen','mrChild','mrBride','jwOld','jwChair'];
 // 아직 전용 그림이 없는 시기는 가장 가까운 시기의 그림을 빌려 쓴다
-const PORT_ALIAS={jwChair:'jwOld',jwSuit:'jwMid',jw30:'jwYoung',jwGroom:'jwYoung',ehBride:'ehYoung',ehBed:'ehMid'};
+const PORT_ALIAS={jwSuit:'jwOld',jw30:'jwYoung',jwGroom:'jwYoung',ehBride:'ehYoung',ehBed:'ehMid'};
+function hasPaint(id){return !!(PIMG[id]||PIMG[PORT_ALIAS[id]]);}
 PORT_FILES.forEach(n=>{const im=new Image();im.onload=()=>{PIMG[n]=im;const base=n.split('_')[0];for(const k in PAINT)delete PAINT[k];if(typeof bustKey!=='undefined')bustKey='';};im.src='img/port/'+n+'.jpg';});
 function paintPortrait(id,ex=''){
   const key=id+'|'+ex;if(PAINT[key])return PAINT[key];

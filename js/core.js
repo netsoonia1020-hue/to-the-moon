@@ -359,7 +359,7 @@ function hideDialog(){$('dialog').classList.add('hidden');document.body.classLis
 let bustKey='';
 function showBust(pid,ex){
   const b=$('bust'),d=$('dialog');
-  if(!pid||typeof paintPortrait!=='function'){b.classList.remove('on');d.classList.remove('withbust');bustKey='';return;}
+  if(!pid||typeof paintPortrait!=='function'||!hasPaint(pid)){b.classList.remove('on');d.classList.remove('withbust');bustKey='';return;}
   const k=pid+ex;if(k!==bustKey){const g=b.getContext('2d');g.clearRect(0,0,300,380);g.drawImage(paintPortrait(pid,ex),0,0);
     if(bustKey){b.classList.remove('swap');void b.offsetWidth;b.classList.add('swap');}bustKey=k;}
   b.classList.add('on');layout();
