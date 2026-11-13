@@ -173,6 +173,13 @@ function buildTiles(){
     else if(c==='a'){R(px,py,16,16,p.road);R(px+hv%14,py+(hv>>4)%14,1.5,.5,'rgba(255,255,255,.06)');if(y===10&&x%3===0)R(px+2,py+14,10,1.5,'rgba(230,220,160,.5)');}
     else R(px,py,16,16,'#000');
   }
+  // 과거 장면이면 배경을 한 번만 흑백·세피아 처리해 둔다 (매 프레임 계산하지 않음)
+  const [sat,sep]=typeof toneFor==='function'?toneFor(sceneName):[1,0];
+  if(sat<1){const tc=tileCv.getContext('2d'),id=tc.getImageData(0,0,tileCv.width,tileCv.height),d=id.data;
+    for(let i=0;i<d.length;i+=4){const r=d[i],g=d[i+1],b=d[i+2],l=.3*r+.59*g+.11*b;
+      let nr=l+(r-l)*sat,ng=l+(g-l)*sat,nb=l+(b-l)*sat;
+      d[i]=nr+(Math.min(255,l*1.07+12)-nr)*sep;d[i+1]=ng+(l*.95+4-ng)*sep;d[i+2]=nb+(l*.78-nb)*sep;}
+    tc.putImageData(id,0,0);}
   ctx=save;
 }
 function drawAnimTiles(){
@@ -308,24 +315,28 @@ function drawGlow(e){
 function drawGlint(e){const cx=(e.fx+e.w/2)*TS,cy=(e.fy+e.h/2)*TS-3,k=(T*.7+e.ph)%1;if(k<.25){const a=Math.sin(k/.25*3.14);R(cx-2*a,cy,4*a,.5,`rgba(255,200,215,${a})`);R(cx-.25,cy-2*a,.5,4*a,`rgba(255,200,215,${a})`);}}
 
 /* ---------- 조명 ---------- */
+// 조명: 움직이지 않는 조명은 한 번만 그려 두고(캐시), 깜빡이는 불·플레이어 주변 빛만 매 프레임 계산
+const LCACHE={key:'',dark:mk(W,H),glow:mk(W,H)};
+function punch(g,l,r){const gr=g.createRadialGradient(l.x,l.y,0,l.x,l.y,r);gr.addColorStop(0,'rgba(0,0,0,1)');gr.addColorStop(.5,'rgba(0,0,0,.7)');gr.addColorStop(1,'rgba(0,0,0,0)');g.fillStyle=gr;g.beginPath();g.arc(l.x,l.y,r,0,7);g.fill();}
+function glowL(g,l,r,a=.2){const gr=g.createRadialGradient(l.x,l.y,0,l.x,l.y,r*.8);gr.addColorStop(0,`rgba(${l.c},${a})`);gr.addColorStop(1,`rgba(${l.c},0)`);g.fillStyle=gr;g.fillRect(l.x-r,l.y-r,r*2,r*2);}
 function drawLights(){
   if(curDark<=0.01)return;
-  lx.globalCompositeOperation='source-over';lx.clearRect(0,0,W,H);
-  lx.fillStyle=`rgba(${S.darkC||'0,0,10'},${curDark})`;lx.fillRect(0,0,W,H);
+  const all=(S.lights?S.lights():[]).filter(l=>!(l.lit&&!S.lit));
+  const stat=all.filter(l=>!l.fl&&!l.beam),dyn=all.filter(l=>l.fl||l.beam);
+  const lh=ent('lh');if(lh&&lh.lamp&&S.lit)stat.push({x:lh.lamp[0],y:lh.lamp[1],r:40,c:'255,230,160'});
+  const key=sceneName+'|'+S.lit+'|'+curDark.toFixed(3)+'|'+(S.darkC||'')+'|'+stat.map(l=>l.x+','+l.y+','+l.r).join(';');
+  if(LCACHE.key!==key){LCACHE.key=key;
+    const d=LCACHE.dark.getContext('2d');d.globalCompositeOperation='source-over';d.clearRect(0,0,W,H);d.fillStyle=`rgba(${S.darkC||'0,0,10'},${curDark})`;d.fillRect(0,0,W,H);
+    d.globalCompositeOperation='destination-out';for(const l of stat)punch(d,l,l.r);d.globalCompositeOperation='source-over';
+    const g=LCACHE.glow.getContext('2d');g.clearRect(0,0,W,H);g.globalCompositeOperation='lighter';for(const l of stat)if(l.c)glowL(g,l,l.r);g.globalCompositeOperation='source-over';}
+  lx.globalCompositeOperation='source-over';lx.clearRect(0,0,W,H);lx.drawImage(LCACHE.dark,0,0);
   lx.globalCompositeOperation='destination-out';
-  const L=S.lights?S.lights().slice():[];
-  if(!P.hidden)L.push({x:P.fx*16+8,y:P.fy*16+6,r:46});
-  const lh=ent('lh');if(lh&&lh.lamp&&S.lit)L.push({x:lh.lamp[0],y:lh.lamp[1],r:40,c:'255,230,160'});
-  for(const l of L){
-    let r=l.r;if(l.fl)r*=.92+.08*Math.sin(T*11+Math.sin(T*7));
-    if(l.beam)r*=.4+.9*Math.pow(Math.max(0,Math.cos(T*.8)),6);
-    if(l.lit&&!S.lit)continue;
-    const g=lx.createRadialGradient(l.x,l.y,0,l.x,l.y,r);g.addColorStop(0,'rgba(0,0,0,1)');g.addColorStop(.5,'rgba(0,0,0,.7)');g.addColorStop(1,'rgba(0,0,0,0)');
-    lx.fillStyle=g;lx.beginPath();lx.arc(l.x,l.y,r,0,7);lx.fill();
-  }
+  if(!P.hidden)punch(lx,{x:P.fx*16+8,y:P.fy*16+6},46);
+  for(const l of dyn){let r=l.r;if(l.fl)r*=.92+.08*Math.sin(T*11+Math.sin(T*7));if(l.beam)r*=.4+.9*Math.pow(Math.max(0,Math.cos(T*.8)),6);l._r=r;punch(lx,l,r);}
+  lx.globalCompositeOperation='source-over';
   ctx.drawImage(lc,0,0);
-  ctx.globalCompositeOperation='lighter';
-  for(const l of L){if(!l.c||(l.lit&&!S.lit))continue;const g=ctx.createRadialGradient(l.x,l.y,0,l.x,l.y,l.r*.8);g.addColorStop(0,`rgba(${l.c},.2)`);g.addColorStop(1,`rgba(${l.c},0)`);ctx.fillStyle=g;ctx.fillRect(l.x-l.r,l.y-l.r,l.r*2,l.r*2);}
+  ctx.globalCompositeOperation='lighter';ctx.drawImage(LCACHE.glow,0,0);
+  if(!LOWFX)for(const l of dyn)if(l.c)glowL(ctx,l,l._r);
   ctx.globalCompositeOperation='source-over';
 }
 function drawBeam(){
@@ -345,7 +356,7 @@ function drawBeam(){
   ctx.globalCompositeOperation='source-over';
 }
 function drawRain(){
-  for(let i=0;i<110;i++){const h=hsh(i,3),x=((h%360)-T*50*(1+(h%3)*.2))%360,y=(((h>>9)%H)+T*(250+(h>>4)%140))%H;R((x+360)%360-20,y,.5,5+(h%3),'rgba(190,210,240,.38)');}
+  for(let i=0;i<(LOWFX?50:110);i++){const h=hsh(i,3),x=((h%360)-T*50*(1+(h%3)*.2))%360,y=(((h>>9)%H)+T*(250+(h>>4)%140))%H;R((x+360)%360-20,y,.5,5+(h%3),'rgba(190,210,240,.38)');}
   for(let i=0;i<16;i++){const k=T*1.8+i*.37,ph=k%1,h=hsh(i,Math.floor(k)+11),x=h%W,y=70+(h>>9)%90;if(SOLID_T.includes(tileAt(x>>4,y>>4))&&tileAt(x>>4,y>>4)!=='a')continue;
     ctx.strokeStyle=`rgba(200,220,255,${.45*(1-ph)})`;ctx.lineWidth=.5;ctx.beginPath();ctx.ellipse(x,y,1+ph*4,.5+ph*1.5,0,0,7);ctx.stroke();}
 }
@@ -440,13 +451,14 @@ function drawWorld(){
   if(S.tint){ctx.globalCompositeOperation='soft-light';ctx.fillStyle=S.tint.replace(/[\d.]+\)$/,'.55)');ctx.fillRect(0,0,W,H);ctx.globalCompositeOperation='source-over';ctx.fillStyle=S.tint;ctx.fillRect(0,0,W,H);}
   drawLights();drawBeam();
   if(S.weather==='rain')drawRain();
-  if(S.memory)for(const m of motes){ctx.fillStyle=`rgba(255,240,210,${.25+.25*Math.sin(T*2+m.a)})`;ctx.fillRect(m.x,m.y,1,1);}
+  if(S.memory&&!LOWFX)for(const m of motes){ctx.fillStyle=`rgba(255,240,210,${.25+.25*Math.sin(T*2+m.a)})`;ctx.fillRect(m.x,m.y,1,1);}
   for(const e of ents)if(!e.hidden){if(e.glow)drawGlow(e);else if(e.glint)drawGlint(e);}
   for(const p of PT){const a=1-p.life/p.max;if(p.kind==='note')txt(p.ch,p.x,p.y,7,`rgba(${p.col},${a})`,'center');else R(p.x,p.y,1,1,`rgba(${p.col},${a})`);}
   for(const m of EM){const e=m.e,k=Math.min(1,m.t*9),x=e.fx*TS+8,y=e.fy*TS-9-(e.scale?-4:0)-k*2,al=Math.min(1,(m.d-m.t)*5);ctx.globalAlpha=al;
     R(x-5.5,y-8,11,8,'#fff');R(x-4.5,y-9,9,10,'#fff');R(x-1,y+1,2,1.5,'#fff');R(x-.5,y+2.5,1,1,'#fff');txt(m.sym,x,y-1.5,6.5,m.sym==='♥'?'#d0506a':'#333','center');ctx.globalAlpha=1;}
   if(flash>0&&S.storm){ctx.fillStyle=`rgba(210,225,255,${flash*.35})`;ctx.fillRect(0,0,W,H);}
   ctx.setTransform(PX,0,0,PX,0,0);
+  drawTone();ctx.setTransform(PX,0,0,PX,0,0);
   ctx.drawImage(vg,0,0);
-  if(S.memory){for(let i=0;i<60;i++){const h=hsh(i,Math.floor(T*12));ctx.fillStyle='rgba(255,255,255,.035)';ctx.fillRect(h%W,(h>>9)%H,1,1);}}
+  if(S.memory&&!LOWFX){for(let i=0;i<60;i++){const h=hsh(i,Math.floor(T*12));ctx.fillStyle='rgba(255,255,255,.035)';ctx.fillRect(h%W,(h>>9)%H,1,1);}}
 }

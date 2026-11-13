@@ -185,4 +185,4 @@ body.talking #tlbar{opacity:.55}
 .tln span#tlTag{display:inline-block;padding:0 6px;margin-right:6px;border-radius:4px;font-size:.85em;font-weight:700;color:#111}
 .tln span.now{background:#9fd3a8}.tln span.mem{background:#f2c46d}
 
-#c,#bust{transition:filter 1.8s ease}
+#bust{transition:filter 1.8s ease}

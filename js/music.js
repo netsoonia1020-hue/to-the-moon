@@ -11,7 +11,7 @@ function bowed(m,t,d,v,dest,{cut=1800,att=.12,rel=.35,rate=5.2,depth=.006,det=4,
   const fl=C.createBiquadFilter();fl.type='lowpass';fl.frequency.value=cut;fl.Q.value=q;
   const g=C.createGain();g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(v,t+att);g.gain.setValueAtTime(v,t+Math.max(att,d*.8));g.gain.linearRampToValueAtTime(0,end);
   fl.connect(g);g.connect(dest);
-  [-det,det].forEach(c=>{const o=C.createOscillator();o.type='sawtooth';o.frequency.value=f;o.detune.value=c;o.connect(fl);const l=vib(o,t,f,rate,depth);o.start(t);o.stop(end+.05);l.stop(end+.05);});
+  (LITE?[0]:[-det,det]).forEach(c=>{const o=C.createOscillator();o.type='sawtooth';o.frequency.value=f;o.detune.value=c;o.connect(fl);const l=vib(o,t,f,rate,depth);o.start(t);o.stop(end+.05);l.stop(end+.05);});
 }
 const INST={
   piano:(m,t,d,v,dest)=>piano(m,t,Math.max(d,.6)*1.4,v,dest),
@@ -89,9 +89,9 @@ function bgmTick(){
     const bar=Math.floor(b.step/spb),i=b.step%spb,ch=d.ch[bar%d.ch.length],t=b.next,play=(part,m,dur,vk=1)=>{const p=P_[part];if(p)INST[p[0]](m,t,dur,p[1]*vk,b.g);};
     if(i===0){
       play('bass',ch[0],sd*spb*.95);if(P_.bass&&P_.bass[0]!=='pizz')play('bass',ch[0]-12,sd*spb*.95,.5);
-      if(P_.pad)for(let k=1;k<4;k++)play('pad',ch[k]-12,sd*spb);
+      if(P_.pad)for(let k=1;k<(LITE?3:4);k++)play('pad',ch[k]-12,sd*spb);
       if(d.mel&&bar>=(d.melFrom||0)){const mel=d.mel[(bar-(d.melFrom||0))%d.mel.length];let off=0;
-        for(const [m,bt] of mel){const dur=bt*sd*2;if(m){INST[P_.mel[0]](m,t+off,dur*.95,P_.mel[1],b.g);if(P_.mel2)INST[P_.mel2[0]](m+12,t+off,dur*.9,P_.mel2[1],b.g);}off+=dur;}}
+        for(const [m,bt] of mel){const dur=bt*sd*2;if(m){INST[P_.mel[0]](m,t+off,dur*.95,P_.mel[1],b.g);if(P_.mel2&&!LITE)INST[P_.mel2[0]](m+12,t+off,dur*.9,P_.mel2[1],b.g);}off+=dur;}}
     }
     const pat=d.arp||ARP8,p=pat[i%pat.length];
     if(p==='c'){for(let k=1;k<4;k++)play('arp',ch[k],sd*2,.7);}

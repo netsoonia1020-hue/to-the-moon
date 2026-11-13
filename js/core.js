@@ -15,7 +15,10 @@ function hsh(x,y){let n=(x*374761393+y*668265263)|0;n=Math.imul(n^(n>>>13),12741
 const shadeCache={};
 function shade(c,k=.78){const key=c+k;if(shadeCache[key])return shadeCache[key];const n=parseInt(c.slice(1),16);
   const f=v=>Math.max(0,Math.min(255,v*k|0));return shadeCache[key]=`rgb(${f(n>>16)},${f((n>>8)&255)},${f(n&255)})`;}
+// 휴대폰은 처음부터 가벼운 소리 구성, 프레임이 밀리면 화면 효과도 줄인다
+var LOWFX=false;
 const isTouch=('ontouchstart' in window)||matchMedia('(pointer:coarse)').matches;
+const LITE=('ontouchstart' in window)||matchMedia('(pointer:coarse)').matches;
 const store={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d;}catch(e){return d;}},
   set(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}},del(k){try{localStorage.removeItem(k);}catch(e){}}};
 const META=Object.assign({ends:[],eggs:[],opt:{snd:true,voice:true},cleared:false},store.get('lhmb_meta',{}));
@@ -48,10 +51,10 @@ const mf=m=>440*Math.pow(2,(m-69)/12);
 function audioInit(){
   const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;
   if(!A.C){
-    const C=A.C=new AC();
+    let C;try{C=new AC({latencyHint:'playback'});}catch(e){C=new AC();}A.C=C;
     A.master=C.createGain();A.master.gain.value=META.opt.snd?1:0;
     const comp=C.createDynamicsCompressor();A.master.connect(comp);comp.connect(C.destination);
-    const len=C.sampleRate*2.8,ib=C.createBuffer(2,len,C.sampleRate);
+    const len=C.sampleRate*(LITE?1.4:2.4),ib=C.createBuffer(2,len,C.sampleRate);
     for(let c=0;c<2;c++){const d=ib.getChannelData(c);for(let i=0;i<len;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/len,2.6);}
     A.rev=C.createConvolver();A.rev.buffer=ib;const rg=C.createGain();rg.gain.value=.4;A.rev.connect(rg);rg.connect(A.master);
     A.music=C.createGain();A.music.gain.value=.85;A.music.connect(A.master);A.music.connect(A.rev);
@@ -387,12 +390,22 @@ const WHEN={present:[2026,'현재','한정우의 집'],m25:[2026,'기억','바�
   m76:[1976,'기억','해변 · 모든 것의 시작'],m08n:[2008,'미래의 기억','신혼집']};
 // 과거일수록 색이 바랜다 (채도↓, 세피아↑). 컷신 전경(비스타)은 원래 색.
 const AGE_TONE={2026:[1,0],2019:[.82,.06],2008:[.64,.12],1998:[.48,.18],1989:[.36,.24],1978:[.26,.3],1976:[.2,.34]};
-let toneKey='';
+let toneKey='';const TONE={sat:1,sep:0,ts:1,tp:0};
 function applyTone(){
-  const w=S&&!S.vista&&WHEN[sceneName],k=w?w[0]+(sceneName==='m25'?'c':''):'none';if(k===toneKey)return;toneKey=k;
-  let f='none';
-  if(w){let [sat,sep]=AGE_TONE[w[0]]||[1,0];if(sceneName==='m25'){sat=.9;sep=.03;}if(sat<1)f=`saturate(${sat}) sepia(${sep}) contrast(.97)`;}
-  cv.style.filter=f;$('bust').style.filter=f==='none'?'':f+' drop-shadow(0 8px 24px rgba(0,0,0,.6))';
+  const w=S&&!S.vista&&WHEN[sceneName],k=w?w[0]+(sceneName==='m25'?'c':''):'none';
+  if(k!==toneKey){toneKey=k;let sat=1,sep=0;if(w){[sat,sep]=AGE_TONE[w[0]]||[1,0];if(sceneName==='m25'){sat=.9;sep=.03;}}
+    TONE.ts=sat;TONE.tp=sep;
+    $('bust').style.filter=sat<1?`saturate(${sat}) sepia(${sep}) drop-shadow(0 8px 24px rgba(0,0,0,.6))`:'';}
+  TONE.sat+=(TONE.ts-TONE.sat)*.04;TONE.sep+=(TONE.tp-TONE.sep)*.04;
+}
+// 화면 전체 채도 낮추기 + 세피아: 매 프레임 사각형 두 번 칠하기 (CSS 필터보다 훨씬 가볍다)
+// 장의 연대에 맞는 목표 채도·세피아
+function toneFor(name){const w=WHEN[name];if(!w)return [1,0];if(name==='m25')return [.9,.03];return AGE_TONE[w[0]]||[1,0];}
+// 가벼운 방식: 배경 타일은 장 시작 때 미리 흑백 처리(buildTiles), 매 프레임엔 반투명 세피아 막 한 겹만
+function drawTone(){
+  const de=1-TONE.sat;if(de<.01&&TONE.sep<.01)return;
+  ctx.setTransform(1,0,0,1,0,0);
+  ctx.fillStyle=`rgba(150,128,100,${Math.min(.42,de*.32+TONE.sep*.45)})`;ctx.fillRect(0,0,cv.width,cv.height);
 }
 function tlUpdate(){
   const bar=$('tlbar'),w=S&&WHEN[sceneName];
@@ -617,4 +630,8 @@ function update(dt){
   if(S&&S.tick)S.tick(dt);
 }
 let last=performance.now();
-function frame(ts){if(started)applyTone();const dt=Math.min(.05,(ts-last)/1000);last=ts;update(dt);draw();requestAnimationFrame(frame);}
+let ftAvg=16;
+function frame(ts){
+  if(started)applyTone();const raw=ts-last,dt=Math.min(.05,raw/1000);last=ts;
+  if(raw<200){ftAvg=ftAvg*.97+raw*.03;if(!LOWFX&&ftAvg>24){LOWFX=true;}}
+  update(dt);draw();requestAnimationFrame(frame);}
