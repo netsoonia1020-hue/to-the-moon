@@ -31,11 +31,10 @@ function layout(){
   if(isTouch){bottom=portrait?132:10;dlg.style.width=portrait?'94vw':'min(68vw,780px)';}
   dlg.style.bottom=bottom+'px';ch.style.bottom=(bottom+dlg.offsetHeight+10)+'px';
   document.body.classList.toggle('portrait',portrait);
-  const bu=$('bust');if(bu){const bh=portrait?Math.min(vh*.26,260):Math.min(Math.max(220,vh*.5),470),bw=bh*300/380;bu.style.height=bh+'px';
-    const dr=dlg.getBoundingClientRect();bu.style.left=(portrait?12:Math.max(8,dr.left-bw*.12))+'px';
-    bu.style.bottom=(portrait?bottom+dlg.offsetHeight-12:bottom+4)+'px';document.documentElement.style.setProperty('--bustW',(portrait?0:bw*.88)+'px');}
+  const bu=$('bust');if(bu){const bh=portrait?Math.min(vh*.26,260):Math.min(Math.max(170,vh*.42),400);bu.style.height=bh+'px';
+    const dr=dlg.getBoundingClientRect();bu.style.left=(dr.left+14)+'px';bu.style.bottom=(bottom+dlg.offsetHeight-10)+'px';}
   const go=$('goal');if(go){go.style.left=(portrait?0:Math.max(0,l))+'px';go.style.top=(portrait?t+H*s+6:t+H*s-34)+'px';}
-  const top=Math.max(t+8,44);
+  const top=Math.max(t+8,52);
   $('hud').style.top=$('toast').style.top=top+'px';
   $('hud').style.right=(portrait?12:Math.max(12,l+10))+'px';$('toast').style.left=(portrait?12:Math.max(12,l+12))+'px';
 }
@@ -203,6 +202,10 @@ function syncOpts(){
   $('oSnd').classList.toggle('off',!META.opt.snd);$('oVoice').classList.toggle('off',!META.opt.voice);
   if(A.master)A.master.gain.value=META.opt.snd?1:0;if(!META.opt.voice||!META.opt.snd)shutUp();
 }
+// 설정 버튼(우측 상단): 누르면 소리·음성·저장·일지 메뉴가 펼쳐진다
+function gearOpen(on){$('opts').classList.toggle('hidden',!on);$('gear').classList.toggle('open',on);}
+$('gear').onclick=e=>{e.stopPropagation();audioInit();gearOpen($('opts').classList.contains('hidden'));};
+addEventListener('pointerdown',e=>{if(!e.target.closest('#opts,#gear'))gearOpen(false);},true);
 $('oSnd').onclick=e=>{e.stopPropagation();META.opt.snd=!META.opt.snd;saveMeta();audioInit();syncOpts();if(META.opt.snd){SFX.chime();toast('소리 켜짐 — 안 들리면 기기 음량·무음 스위치를 확인하세요');}};
 $('oVoice').onclick=e=>{e.stopPropagation();META.opt.voice=!META.opt.voice;saveMeta();syncOpts();
   if(META.opt.voice){pickVoice();if(!TTS.ok||!TTS.voice)toast('이 기기·브라우저에는 한국어 낭독 음성이 없어요');else speak('','음성 낭독을 켰습니다.');}};
@@ -235,7 +238,7 @@ const LB={v:0,t:0};function letterbox(on){LB.t=on?1:0;}
 const SH={t:0,amp:0};function shake(ms=400,amp=3){SH.t=ms/1000;SH.amp=amp;}
 const EM=[];function emote(e,sym,ms=1400){EM.push({e,sym,t:0,d:ms/1000});return wait(Math.min(ms,700));}
 const PT=[];
-function noteFx(e){PT.push({x:e.fx*TS+8+(Math.random()*6-3),y:e.fy*TS-4,vx:(Math.random()-.5)*8,vy:-14,life:0,max:1.8,kind:'note',ch:Math.random()<.5?'♪':'♫',col:'255,236,170'});}
+function noteFx(e){PT.push({x:e.fx*TS+8+(Math.random()*6-3),y:e.fy*TS-12,vx:(Math.random()-.5)*8,vy:-14,life:0,max:1.8,kind:'note',ch:Math.random()<.5?'♪':'♫',col:'255,236,170'});}
 function sparkFx(x,y,n=10,col='255,236,170'){for(let i=0;i<n;i++){const a=Math.random()*6.28,s=10+Math.random()*26;PT.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s-10,g:30,life:0,max:.6+Math.random()*.6,kind:'spark',col});}}
 const FP=[];
 const VIS={o:null,a:0,ta:0,sp:1};
@@ -311,7 +314,7 @@ function openJournal(){
   j.innerHTML=h;j.querySelectorAll('.jp').forEach(e=>e.querySelector('canvas').getContext('2d').drawImage(paintPortrait(e.dataset.id,''),0,0));
   const pn=$('journal');pn.classList.remove('hidden');const close=()=>{pn.classList.add('hidden');panelKeys=null;};$('jClose').onclick=close;panelKeys=k=>{if(k==='esc'||k==='enter')close();};
 }
-$('oBook').onclick=e=>{e.stopPropagation();openJournal();};
+$('oBook').onclick=e=>{e.stopPropagation();gearOpen(false);openJournal();};
 // 미니게임 1: 연타 게이지
 function mashGame(title,desc,{need=1,gain=.075,decay=.16,btn='힘주기'}={}){
   return new Promise(res=>{
@@ -359,7 +362,7 @@ function showBust(pid,ex){
   if(!pid||typeof paintPortrait!=='function'){b.classList.remove('on');d.classList.remove('withbust');bustKey='';return;}
   const k=pid+ex;if(k!==bustKey){const g=b.getContext('2d');g.clearRect(0,0,300,380);g.drawImage(paintPortrait(pid,ex),0,0);
     if(bustKey){b.classList.remove('swap');void b.offsetWidth;b.classList.add('swap');}bustKey=k;}
-  b.classList.add('on');d.classList.toggle('withbust',!document.body.classList.contains('portrait'));layout();
+  b.classList.add('on');layout();
 }
 function choose(opts){
   return new Promise(res=>{
@@ -467,7 +470,7 @@ function openSaves(mode){ // mode: 'game'(저장+불러오기) | 'load'(불러�
     pn.classList.remove('hidden');render();
   });
 }
-$('oSave').onclick=e=>{e.stopPropagation();audioInit();
+$('oSave').onclick=e=>{e.stopPropagation();audioInit();gearOpen(false);
   if(!started){if(menu)menu.openLoad&&menu.openLoad();return;}
   if(!canSave()){toast('지금은 저장할 수 없어요');return;}
   if(locked||choice||panelKeys){toast('대화가 끝난 뒤에 저장할 수 있어요');return;}
@@ -522,7 +525,7 @@ const JOY={id:null,x:0,y:0,t:0,moved:false,dir:null};
 function joySet(d){if(JOY.dir===d)return;if(JOY.dir)pressDir(JOY.dir,false);JOY.dir=d;if(d)pressDir(d,true);}
 if(isTouch){
   $('touch').classList.remove('hidden');
-  const UI='#dialog,#choices,.panel,#opts,#tA,#title,#endcard,#credits,#cutin';
+  const UI='#gear,#dialog,#choices,.panel,#opts,#tA,#title,#endcard,#credits,#cutin';
   addEventListener('pointerdown',e=>{
     if(JOY.id!==null||e.pointerType==='mouse'||e.target.closest(UI))return;
     if(menu)return;

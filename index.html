@@ -14,7 +14,8 @@
 <div id="toast"></div>
 <div id="hud"></div>
 <div id="hint">방향키 / WASD 이동 · Space / Enter 조사</div>
-<div id="opts"><button id="oSnd">🔊 소리</button><button id="oVoice">🗣 음성</button><button id="oSave">💾 저장</button><button id="oBook">📖 일지</button></div>
+<button id="gear" aria-label="설정">⚙</button>
+<div id="opts" class="hidden"><div class="ot">설정</div><button id="oSnd">🔊 소리</button><button id="oVoice">🗣 음성 낭독</button><button id="oSave">💾 저장 / 불러오기</button><button id="oBook">📖 기억 일지</button></div>
 <canvas id="bust" width="300" height="380"></canvas>
 <div id="goal"></div>
 <div id="dialog" class="hidden"><canvas id="dport" width="64" height="64"></canvas><div id="dname"></div><div id="dtext"></div><div id="dnext" class="hidden">▼</div></div>
@@ -57,7 +58,6 @@
   <div class="sub">어느 유품정리사가 본, 여섯 음의 기억</div>
   <div id="menu"></div>
   <div id="gallery"></div>
-  <div class="small">소리를 켜고 플레이하세요 (아이폰은 무음 스위치 해제) · 약 1시간 20분 · 9장 · 엔딩 5개</div>
 </div>
 <div id="endcard" class="hidden"><div class="tag" id="endTag"></div><h1 id="endTitle"></h1><p id="endDesc"></p><p id="endProg"></p><button id="restart">타이틀로</button></div>
 <script src="js/core.js"></script>
