@@ -67,3 +67,11 @@ html,body{margin:0;height:100%;background:#05060a;overflow:hidden;color:#eee;
 #endcard h1{font-weight:300;letter-spacing:.14em;font-size:clamp(24px,5vw,46px);margin:8px 0 10px}
 #endcard p{color:#bbc;margin:5px;font-size:14px;line-height:1.7;word-break:keep-all}
 #endcard button{margin-top:26px;font:inherit;background:rgba(0,0,0,.4);color:#eee;border:1px solid #888;border-radius:30px;padding:10px 26px;cursor:pointer}
+.sv{display:flex;align-items:center;gap:8px;border:1px solid #5a4630;border-radius:8px;padding:10px;margin-bottom:8px;background:#21190f}
+.sv.cur{outline:2px solid #8fb8e8}
+.sv .info{flex:1;font-size:14px;line-height:1.5;color:#e9dfc6;word-break:keep-all}
+.sv .info small{color:#998;display:block}
+.sv button{font:inherit;font-size:14px;padding:8px 12px;border-radius:7px;border:1px solid #8a6d3b;background:#2a2016;color:#eee;cursor:pointer}
+.sv button:disabled{opacity:.35;cursor:default}
+#svMsg{min-height:1.4em;margin-top:8px;font-size:14px;color:#e9dfc6;text-align:center}
+#saves{z-index:35}

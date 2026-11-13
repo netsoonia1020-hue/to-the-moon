@@ -324,7 +324,7 @@ function hop(e,n=2){e.hop=n*.3;return wait(n*300);}
 async function run(fn){
   if(locked)return;locked=true;
   try{await fn();}catch(err){console.error(err);}
-  hideDialog();locked=false;
+  hideDialog();locked=false;autosave();
 }
 function frag(id,fn){
   return async e=>{
@@ -344,8 +344,65 @@ function loadScene(name){
   PT.length=0;FP.length=0;EM.length=0;CAM.x=W/2;CAM.y=H/2;CAM.z=1;CAM.a=null;LB.t=0;VIS.ta=0;VIS.a=0;
   if(S.map)buildTiles();
   playBgm(S.bgm);setAmb(S.amb);hud();
-  if(name!=='title')store.set('lhmb_save',{scene:name,F});
+  if(name!=='title'&&!F.ended)store.set('lhmb_save',snapshot());
 }
+/* ---------- 저장 ---------- */
+const SCENE_LABEL={present:'현재 · 한정우의 집',m19:'기억 · 2019 등대 관리실',m08:'기억 · 2008 예식장 앞',m98:'기억 · 1998 병실',m85:'기억 · 1985 등명실',m76:'기억 · 1976 해변'};
+function snapshot(){return {v:2,scene:sceneName,F:JSON.parse(JSON.stringify(F)),pos:[P.x,P.y,P.dir],t:Date.now()};}
+function canSave(){return started&&S&&S.map&&SCENE_LABEL[sceneName]&&!F.ended;}
+function autosave(){if(canSave()&&!locked)store.set('lhmb_save',snapshot());}
+function storageOK(){try{localStorage.setItem('lhmb_t','1');localStorage.removeItem('lhmb_t');return true;}catch(e){return false;}}
+function saveLabel(sv){
+  if(!sv)return '<b>비어 있음</b>';
+  const d=new Date(sv.t||0),pad=n=>String(n).padStart(2,'0');
+  const f=sv.F||{},bits=[`♪ ${(f.notes||[]).length}/6`];if((f.keeps||[]).length)bits.push(`♥ ${f.keeps.length}/5`);if((f.cats||[]).length)bits.push(`🐱 ${f.cats.length}/5`);
+  return `<b>${SCENE_LABEL[sv.scene]||sv.scene}</b><small>${bits.join(' · ')} · ${d.getMonth()+1}/${d.getDate()} ${pad(d.getHours())}:${pad(d.getMinutes())}</small>`;
+}
+// 불러오기: 장면을 다시 만들고 저장된 위치에 서윤을 세운다
+async function restore(sv){
+  const cm=F.catMode;resetF(sv.F);if(cm)F.catMode=cm;
+  locked=true;hideDialog();await setOp($('fader'),0,10);$('fader').style.background='#000';await setOp($('fader'),1,500);
+  loadScene(sv.scene);
+  if(sv.pos){const [x,y,d]=sv.pos;if(!solidAt(x,y)||!ents.length)Object.assign(P,{x,y,fx:x,fy:y,tx:x,ty:y,dir:d||'down'});}
+  await setOp($('fader'),0,700);$('fader').style.background='#fff';
+  toast('불러왔습니다 — '+(SCENE_LABEL[sv.scene]||''));locked=false;
+}
+function openSaves(mode){ // mode: 'game'(저장+불러오기) | 'load'(불러오기만)
+  return new Promise(res=>{
+    const pn=$('saves'),list=$('svList'),msg=$('svMsg');let cur=0,ask=null;
+    $('svTitle').textContent=mode==='load'?'불러오기':'저장 / 불러오기';
+    $('svHint').innerHTML=(storageOK()?'':'⚠ 이 화면에서는 브라우저 저장소를 쓸 수 없어 저장이 남지 않을 수 있어요.<br>')+
+      (mode==='load'?'불러올 기록을 고르세요.':'저장할 칸을 고르세요. 대화 중이 아닐 때만 저장됩니다.<br>자동 저장은 무언가를 조사할 때마다 따로 기록됩니다.');
+    msg.textContent='';
+    const slots=()=>[['auto','자동 저장'],['s1','슬롯 1'],['s2','슬롯 2'],['s3','슬롯 3']].map(([k,n])=>({k,n,key:k==='auto'?'lhmb_save':'lhmb_slot_'+k,sv:store.get(k==='auto'?'lhmb_save':'lhmb_slot_'+k,null)}));
+    function render(){
+      list.innerHTML='';
+      slots().forEach((s,i)=>{
+        const row=document.createElement('div');row.className='sv'+(i===cur&&!isTouch?' cur':'');
+        const ok=s.sv&&SCENE_LABEL[s.sv.scene];
+        row.innerHTML=`<div class="info"><small>${s.n}</small>${saveLabel(ok?s.sv:null)}</div>`;
+        if(mode==='game'&&s.k!=='auto'){const b=document.createElement('button');b.textContent=ask===s.k?'덮어쓰기?':'저장';b.onclick=ev=>{ev.stopPropagation();doSave(s);};row.appendChild(b);}
+        const l=document.createElement('button');l.textContent='불러오기';l.disabled=!ok;l.onclick=ev=>{ev.stopPropagation();if(ok)doLoad(s);};row.appendChild(l);
+        list.appendChild(row);});
+    }
+    function doSave(s){
+      if(s.sv&&ask!==s.k){ask=s.k;msg.textContent='이미 기록이 있어요. 한 번 더 누르면 덮어씁니다.';render();return;}
+      ask=null;store.set(s.key,snapshot());SFX.keep();msg.textContent=`${s.n}에 저장했습니다.`;render();
+    }
+    function doLoad(s){close(true);if(mode==='load')res(s.sv);else{restore(s.sv);res(null);}}
+    function close(silent){pn.classList.add('hidden');panelKeys=null;if(!silent)res(null);}
+    $('svClose').onclick=()=>close();
+    panelKeys=k=>{const n=4;if(k==='up')cur=(cur+n-1)%n;else if(k==='down')cur=(cur+1)%n;else if(k==='esc')return close();
+      else if(k==='act'||k==='enter'){const s=slots()[cur];if(mode==='game'&&s.k!=='auto'&&k==='act')doSave(s);else if(s.sv&&SCENE_LABEL[s.sv.scene])doLoad(s);return;}render();};
+    pn.classList.remove('hidden');render();
+  });
+}
+$('oSave').onclick=e=>{e.stopPropagation();audioInit();
+  if(!started){if(menu)menu.openLoad&&menu.openLoad();return;}
+  if(!canSave()){toast('지금은 저장할 수 없어요');return;}
+  if(locked||choice||panelKeys){toast('대화가 끝난 뒤에 저장할 수 있어요');return;}
+  openSaves('game');};
+
 async function goScene(name,cardHtml,{white=true,hold=2600}={}){
   locked=true;hideDialog();
   if(white){SFX.whoosh();shake(900,2);cam(P.fx*TS+8,P.fy*TS+8,2.2,1100);await setOp($('fader'),1,1100);}

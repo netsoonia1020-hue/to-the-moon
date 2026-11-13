@@ -201,7 +201,6 @@ async function deskScript(e){
         await say('서윤','(…오겠다는 말은 없었다. 오지 않겠다는 말도.)');F.called=true;}
       else{await say('미래','…네. 수고하세요.');await nar('— 뚝.');F.called=false;await say('서윤','(…끝내 말하지 못했다.)');}
     }else{F.called=false;await say('서윤','(나는 물건을 정리하는 사람이다. 사람 사이를 정리하는 사람이 아니라.)');}
-    store.set('lhmb_save',{scene:'present',F});
   }
   await nar('깎다 만 원통과 놋쇠 핀들. 오르골이 다시 노래하기를 기다리고 있다.');
   await say('서윤','(순서라면 내가 알아. 기억 속에서 들었으니까. …다만 낡은 태엽이 몇 번이나 버텨 줄지.)');
@@ -689,7 +688,7 @@ const GOLD=s=>`<span style="color:#f2dca0;font-size:1.25em">${s}</span>`;
 async function fadeBlack(ms=2500){await setOp($('fader'),0,10);$('fader').style.background='#000';await setOp($('fader'),1,ms);}
 async function toVista(o){S=Object.assign({},SC.title,{vista:o});ents=[];P.hidden=true;LB.t=0;$('hud').innerHTML='';await setOp($('fader'),0,2500);$('fader').style.background='#fff';}
 async function finish(n){
-  if(!META.ends.includes(n))META.ends.push(n);META.cleared=true;saveMeta();store.del('lhmb_save');
+  if(!META.ends.includes(n))META.ends.push(n);META.cleared=true;F.ended=true;saveMeta();store.del('lhmb_save');
   const d=ENDS[n],ec=$('endcard');$('endTag').textContent=`${d.tag} · ${n}/5`;$('endTitle').textContent=d.title;$('endDesc').textContent=d.desc;
   $('endProg').textContent=`본 엔딩 ${META.ends.length}/5 · 이스터에그 ${META.eggs.length}/6 · 이번 회차: 미래의 조각 ${F.keeps.length}/5, 소금이 ${F.cats.length}/5`;
   ec.classList.remove('hidden');void ec.offsetWidth;ec.style.opacity=1;locked=true;
@@ -824,11 +823,14 @@ async function ending5(){
 function buildMenu(){
   const el=$('menu');el.innerHTML='';const items=[['처음부터',()=>startGame('new')]];
   const sv=store.get('lhmb_save',null);if(sv&&SC[sv.scene])items.unshift(['이어하기',()=>startGame('cont',sv)]);
+  const anySlot=['s1','s2','s3'].some(k=>store.get('lhmb_slot_'+k,null));
+  const openLoad=async()=>{menu=null;const pick=await openSaves('load');if(pick)startGame('cont',pick);else buildMenu();};
+  if(anySlot)items.splice(sv&&SC[sv.scene]?1:0,0,['불러오기',openLoad]);
   if(META.cleared)items.push(['기억을 모두 본 뒤부터 (엔딩 수집)',()=>startGame('after')]);
   let sel=0;
   const render=()=>[...el.children].forEach((c,i)=>c.classList.toggle('sel',i===sel));
   items.forEach(([t,fn],i)=>{const d=document.createElement('div');d.className='mi';d.textContent=t;d.onclick=()=>{audioInit();sel=i;menu=null;fn();};d.onmouseenter=()=>{sel=i;render();};el.appendChild(d);});
-  menu={move(d){sel=(sel+d+items.length)%items.length;render();SFX.blip();},pick(){const f=items[sel][1];menu=null;f();}};render();
+  menu={openLoad,move(d){sel=(sel+d+items.length)%items.length;render();SFX.blip();},pick(){const f=items[sel][1];menu=null;f();}};render();
   $('gallery').innerHTML=META.ends.length||META.eggs.length?`엔딩 ${[1,2,3,4,5].map(n=>META.ends.includes(n)?`<b style="color:#f2c46d">${ENDS[n].title}</b>`:'???').join(' · ')}<br>이스터에그 ${META.eggs.length}/6`:'';
 }
 let titleTaps=0;
@@ -837,7 +839,9 @@ async function startGame(mode,sv){
   if(started)return;started=true;audioInit();const cm=F.catMode;
   const t=$('title');t.style.transition='opacity 1.2s';t.style.opacity=0;setTimeout(()=>t.classList.add('hidden'),1200);
   locked=true;
-  if(mode==='cont'){resetF(sv.F);F.catMode=cm;await goScene(sv.scene,'<p>이어서…</p>',{white:false,hold:900});return;}
+  if(mode==='cont'){resetF(sv.F);F.catMode=cm;await cardShow('<p>이어서…</p>',800);loadScene(sv.scene);
+    if(sv.pos){const [x,y,d]=sv.pos;if(!solidAt(x,y))Object.assign(P,{x,y,fx:x,fy:y,tx:x,ty:y,dir:d||'down'});}
+    await wait(600);await cardHide(1000);if(S.title)toast(S.title);locked=false;if(S.enter)await run(S.enter);return;}
   if(mode==='after'){const b=META.best||{};resetF({introDone:true,phase1:true,notes:PZ_ANS.slice(),keeps:(b.keeps||[]).slice(),cats:(b.cats||[]).slice(),catMode:cm});
     await goScene('present','<h1>2026년 11월 13일</h1><p>기억에서 돌아온 뒤, 한정우의 집</p>',{white:false,hold:1800});return;}
   resetF({catMode:cm});store.del('lhmb_save');
