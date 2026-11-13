@@ -35,7 +35,7 @@ function layout(){
     const dr=dlg.getBoundingClientRect();bu.style.left=(dr.left+14)+'px';bu.style.bottom=(bottom+dlg.offsetHeight-10)+'px';}
   const go=$('goal');if(go){go.style.left=(portrait?0:Math.max(0,l))+'px';go.style.top=(portrait?t+H*s+6:t+H*s-34)+'px';}
   const top=Math.max(t+8,52);
-  $('hud').style.top=$('toast').style.top=top+'px';
+  $('hud').style.top=top+'px';$('toast').style.top=(top+52)+'px';const tb=$('tlbar');tb.style.top=top+'px';tb.style.left=(portrait?10:Math.max(10,l+10))+'px';
   $('hud').style.right=(portrait?12:Math.max(12,l+10))+'px';$('toast').style.left=(portrait?12:Math.max(12,l+12))+'px';
 }
 addEventListener('resize',layout);
@@ -380,7 +380,32 @@ async function cardHide(ms=1000){await setOp($('card'),0,ms);}
 async function cardLines(lines,clear=true,hold=3000){for(const l of lines){await cardShow(`<p>${l}</p>`,1100,clear);await wait(hold+l.length*40);await cardHide(900);}}
 let toastT=0;
 function toast(t,ms=3800){const el=$('toast');el.textContent=t;el.style.opacity=1;clearTimeout(toastT);toastT=setTimeout(()=>el.style.opacity=0,ms);}
+// 시간 표시줄: 지금이 언제인지 늘 보이게 (2026 → 1976, 오른쪽으로 갈수록 과거)
+const TL_YEARS=[2026,2019,2008,1998,1989,1978,1976];
+const WHEN={present:[2026,'현재','한정우의 집'],m25:[2026,'기억','바다요양원 · 한 달 전'],m19:[2019,'기억','등대 관리실'],m08:[2008,'기억','서울 · 예식장 앞'],
+  m98:[1998,'기억','병실 304호'],mstorm:[1998,'기억','폭풍의 등대'],mboat:[1998,'서윤의 기억','해진호 갑판'],m85:[1989,'기억','등명실'],m78:[1978,'기억','등대 앞마당 · 결혼식'],
+  m76:[1976,'기억','해변 · 모든 것의 시작'],m08n:[2008,'미래의 기억','신혼집']};
+// 과거일수록 색이 바랜다 (채도↓, 세피아↑). 컷신 전경(비스타)은 원래 색.
+const AGE_TONE={2026:[1,0],2019:[.82,.06],2008:[.64,.12],1998:[.48,.18],1989:[.36,.24],1978:[.26,.3],1976:[.2,.34]};
+let toneKey='';
+function applyTone(){
+  const w=S&&!S.vista&&WHEN[sceneName],k=w?w[0]+(sceneName==='m25'?'c':''):'none';if(k===toneKey)return;toneKey=k;
+  let f='none';
+  if(w){let [sat,sep]=AGE_TONE[w[0]]||[1,0];if(sceneName==='m25'){sat=.9;sep=.03;}if(sat<1)f=`saturate(${sat}) sepia(${sep}) contrast(.97)`;}
+  cv.style.filter=f;$('bust').style.filter=f==='none'?'':f+' drop-shadow(0 8px 24px rgba(0,0,0,.6))';
+}
+function tlUpdate(){
+  const bar=$('tlbar'),w=S&&WHEN[sceneName];
+  if(!started||!w){bar.classList.add('off');return;}bar.classList.remove('off');
+  const [y,tag,place]=w,idx=TL_YEARS.indexOf(y);
+  const seen=new Set([2026]);[['m19done',2019],['m08done',2008],['m98done',1998],['m85done',1989],['m78done',1978],['phase1',1976]].forEach(([f,yy])=>{if(F[f])seen.add(yy);});
+  $('tlTrack').innerHTML=TL_YEARS.map((v,i)=>`${i?'<i></i>':''}<b class="${i===idx?'on':seen.has(v)?'seen':''}"><em>${v}</em></b>`).join('');
+  const ago=2026-y;
+  $('tlTag').textContent=tag;$('tlTag').className=tag==='현재'?'now':'mem';
+  $('tlNow').textContent=`${y}년 · ${place}${ago>0?` · ${ago}년 전`:''}`;
+}
 function hud(){
+  tlUpdate();
   const h=$('hud');let s='';
   if(S&&S.frags){const n=S.frags.filter(f=>F[f]).length;s+=`기억의 조각 ${'◆'.repeat(n)}${'◇'.repeat(S.frags.length-n)}<br>`;}
   if(F.notes.length){const all=[...F.notes];while(all.length<6)all.push(null);s+='♪ '+all.map(m=>m?NOTE_NAME[m]:'·').join(' ')+'<br>';}
@@ -592,4 +617,4 @@ function update(dt){
   if(S&&S.tick)S.tick(dt);
 }
 let last=performance.now();
-function frame(ts){const dt=Math.min(.05,(ts-last)/1000);last=ts;update(dt);draw();requestAnimationFrame(frame);}
+function frame(ts){if(started)applyTone();const dt=Math.min(.05,(ts-last)/1000);last=ts;update(dt);draw();requestAnimationFrame(frame);}

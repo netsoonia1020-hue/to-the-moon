@@ -427,7 +427,13 @@ function drawWorld(){
   if(!P.hidden)list.push({k:P.fy+1.02,p:1});
   list.sort((a,b)=>a.k-b.k);
   for(const it of list){
-    if(it.p){if(F.catMode)drawCat(P.fx*TS,P.fy*TS,'#e8a050',false,0);else drawChar(P.fx*TS,P.fy*TS-2,LOOK.seoyun,P.dir,P.moving?(Math.floor(T*8)%2?1:2):0,false,{ph:1.7});}
+    if(it.p){
+      // 기억 속의 서윤은 그 시간에 속하지 않은 관찰자: 반투명하게, 은은히 일렁이며
+      const ghost=S.memory;if(ghost){const px=P.fx*TS+8,py=P.fy*TS+2,gl=ctx.createRadialGradient(px,py,0,px,py,14);gl.addColorStop(0,'rgba(200,225,255,.22)');gl.addColorStop(1,'rgba(200,225,255,0)');ctx.fillStyle=gl;ctx.fillRect(px-14,py-14,28,28);
+        ctx.globalAlpha=.5+.08*Math.sin(T*2.4);}
+      if(F.catMode)drawCat(P.fx*TS,P.fy*TS,'#e8a050',false,0);else drawChar(P.fx*TS,P.fy*TS-2,LOOK.seoyun,P.dir,P.moving?(Math.floor(T*8)%2?1:2):0,false,{ph:1.7});
+      if(ghost){ctx.globalAlpha=1;for(let i=0;i<2;i++){const k=(T*.6+i*.5)%1;R(P.fx*TS+4+((i*7+Math.floor(T*3))%8),P.fy*TS+10-k*16,1,1,`rgba(220,235,255,${.6*(1-k)})`);}}
+    }
     else DRAW[it.e.kind](it.e,it.e.fx*TS,it.e.fy*TS);
   }
   if(S.over)S.over();
