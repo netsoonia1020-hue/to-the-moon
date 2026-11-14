@@ -265,3 +265,9 @@ body.bland #dialog.withbust{padding-left:calc(var(--bustW) + 14px)}
   #inName{font-size:30px;margin-bottom:6px}
   #inDesc{font-size:14px;line-height:1.6;padding-top:8px}
 }
+
+/* 세로 화면 대화 중: 수집 현황 줄을 잠깐 숨겨 초상화 자리로 */
+body.portrait.talking #hud{opacity:0}
+#hud{transition:opacity .2s}
+/* 토스트는 시간 표시줄과 겹치지 않게 게임 화면 안쪽 위에 */
+body.portrait #toast{font-size:13px;background:rgba(0,0,0,.55);padding:3px 10px;border-radius:12px}

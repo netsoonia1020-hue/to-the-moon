@@ -26,7 +26,8 @@ function saveMeta(){store.set('lhmb_meta',META);}
 
 // 화면 배치: 세로(휴대폰) · 가로 휴대폰 · PC 를 따로 잡는다
 const VIEW={crop:false,s:3,cw:960,vw:960,off:0,mode:'pc'};
-function safe(n){return parseFloat(getComputedStyle(document.documentElement).getPropertyValue(n))||0;}
+const SAFE_PROBE=(()=>{const d=document.createElement('div');d.style.cssText='position:fixed;left:0;top:0;width:0;height:0;visibility:hidden;pointer-events:none;padding:env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px)';document.documentElement.appendChild(d);return d;})();
+function safe(n){const cs=getComputedStyle(SAFE_PROBE),k={'--sat':'paddingTop','--sar':'paddingRight','--sab':'paddingBottom','--sal':'paddingLeft'}[n];return parseFloat(cs[k])||0;}
 function layout(){
   const vw=innerWidth,vh=innerHeight,portrait=vh>vw*1.1,phoneLand=!portrait&&vh<540&&isTouch;
   const sat=safe('--sat'),sab=safe('--sab'),sal=safe('--sal'),sar=safe('--sar');
@@ -40,7 +41,7 @@ function layout(){
     s=vw/W;const gH=H*s;
     vl=0;vt=topBar;vW=vw;vH=gH;
     dlg.style.width='94vw';
-    tb.style.top=(sat+8)+'px';tb.style.left='10px';
+    tb.style.top=(sat+8)+'px';tb.style.left='10px';tb.classList.remove('mini');
     hd.style.top=(vt+vH+4)+'px';hd.style.right='12px';hd.style.left='12px';
     go.style.left='0px';go.style.top=(vt+vH+26)+'px';
     to.style.top=(vt+8)+'px';to.style.left='12px';
@@ -66,7 +67,7 @@ function layout(){
     // 초상화는 항상 크게: 대사창 위에 서 있는 형태 (가로 휴대폰은 대사창 왼쪽에 걸쳐 섬)
     document.body.classList.remove('bthumb');
     let bh,left,bot;
-    if(mode==='port'){const free=(vh-bottom-dh)-(vt+vH+30);bh=Math.max(150,Math.min(free+40,230));left=dr.left+10;bot=bottom+dh-12;document.documentElement.style.setProperty('--bustW','0px');}
+    if(mode==='port'){const free=(vh-bottom-dh)-(vt+vH+8);bh=Math.max(90,Math.min(free+10,240));left=dr.left+10;bot=bottom+dh-12;document.documentElement.style.setProperty('--bustW','0px');}
     else if(mode==='land'){bh=Math.min(vh*.62,260);const bw=bh*300/380;left=Math.max(6,sal+4);bot=bottom;document.documentElement.style.setProperty('--bustW',Math.max(0,bw-(dr.left-left)+8)+'px');}
     else{bh=Math.min(Math.max(150,vh-bottom-dh-40),Math.min(260,vh*.4));left=dr.left+12;bot=bottom+dh-8;document.documentElement.style.setProperty('--bustW','0px');}
     bu.style.height=bh+'px';bu.style.left=left+'px';bu.style.bottom=bot+'px';
