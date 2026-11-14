@@ -303,7 +303,7 @@ async function startGame(mode,sv){
   if(started)return;started=true;audioInit();const cm=F.catMode;
   const t=$('title');t.style.transition='opacity 1.2s';t.style.opacity=0;setTimeout(()=>t.classList.add('hidden'),1200);
   locked=true;
-  if(mode==='cont'){resetF(sv.F);F.catMode=cm;await cardShow('<p>이어서…</p>',800);loadScene(sv.scene);
+  if(mode==='cont'){resetF(sv.F);F.catMode=cm;if(typeof fixNotes==='function')fixNotes();await cardShow('<p>이어서…</p>',800);loadScene(sv.scene);
     if(sv.pos){const [x,y,d]=sv.pos;if(!solidAt(x,y))Object.assign(P,{x,y,fx:x,fy:y,tx:x,ty:y,dir:d||'down'});}
     await wait(600);await cardHide(1000);if(S.title)toast(S.title);locked=false;if(S.enter)await run(S.enter);if(typeof pendingFinale==='function')await run(pendingFinale);return;}
   if(mode==='after'){const b=META.best||{};resetF({introDone:true,phase1:true,stdone:true,notes:PZ_ANS.slice(),keeps:(b.keeps||[]).slice(),cats:(b.cats||[]).slice(),catMode:cm});

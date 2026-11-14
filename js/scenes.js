@@ -366,3 +366,10 @@ async function pendingFinale(){
   if(!f||F[f]||!S.frags.every(k=>F[k]))return;
   await wait(500);letterbox(true);await S.finale();letterbox(false);cam(null);hud();
 }
+
+/* 음표 목록을 끝낸 장 기준으로 다시 맞춘다 (중복·누락된 저장 기록 복구) */
+const NOTE_BY=[['m25','m25done',76],['m19','m19done',79],['m08','m08done',81],['m98','m98done',79],['m85','m85done',76],['m76','phase1',74]];
+function fixNotes(){
+  if(F.phase1&&F.notes&&F.notes.length===6&&!F.nt_m25&&!F.m25done)return; // 기억을 모두 본 뒤부터 시작한 경우
+  F.notes=[];for(const [sc,done,m] of NOTE_BY){if(F[done]){F.notes.push(m);F['nt_'+sc]=true;}else delete F['nt_'+sc];}
+}

@@ -467,7 +467,7 @@ function hud(){
   h.innerHTML=document.body.classList.contains('portrait')?s.replace(/<br>/g,'<i>·</i>').replace(/<i>·<\/i>$/,''):s;
   const g=$('goal');if(g){const t=S?(S.goal?S.goal():(typeof defGoal==='function'&&S.frags?defGoal():'')):'';g.textContent=t?'▸ '+t:'';g.style.opacity=t?1:0;}
 }
-async function addNotes(ns){F.notes.push(...ns);hud();SFX.chime();sparkFx(P.fx*TS+8,P.fy*TS,14);toast('♪ 음의 조각을 얻었다 — '+ns.map(m=>NOTE_NAME[m]).join(' · '),4500);await wait(900);}
+async function addNotes(ns){const nk='nt_'+sceneName;if(F[nk])return;F[nk]=true;F.notes.push(...ns);hud();SFX.chime();sparkFx(P.fx*TS+8,P.fy*TS,14);toast('♪ 음의 조각을 얻었다 — '+ns.map(m=>NOTE_NAME[m]).join(' · '),4500);await wait(900);}
 function keep(id,label){if(F.keeps.includes(id))return;F.keeps.push(id);SFX.keep();sparkFx(P.fx*TS+8,P.fy*TS,10,'255,170,190');hud();toast(`♥ 미래의 조각 — ${label} (${F.keeps.length}/6)`,4500);}
 function egg(id,label){if(META.eggs.includes(id))return;META.eggs.push(id);saveMeta();SFX.chime();setTimeout(()=>toast(`🥚 이스터에그 발견 — ${label} (${META.eggs.length}/7)`,5000),600);}
 function walk(e,path,speed=2.6){return new Promise(r=>{e.path=path.map(p=>p.slice());e.speed=speed;e.onDone=r;});}
@@ -514,7 +514,7 @@ function saveLabel(sv){
 }
 // 불러오기: 장면을 다시 만들고 저장된 위치에 서윤을 세운다
 async function restore(sv){
-  const cm=F.catMode;resetF(sv.F);if(cm)F.catMode=cm;
+  const cm=F.catMode;resetF(sv.F);if(cm)F.catMode=cm;if(typeof fixNotes==='function')fixNotes();
   locked=true;hideDialog();await setOp($('fader'),0,10);$('fader').style.background='#000';await setOp($('fader'),1,500);
   loadScene(sv.scene);
   if(sv.pos){const [x,y,d]=sv.pos;if(!solidAt(x,y)||!ents.length)Object.assign(P,{x,y,fx:x,fy:y,tx:x,ty:y,dir:d||'down'});}
