@@ -61,13 +61,18 @@ function layout(){
   Object.assign(cv.style,{width:W*s+'px',height:H*s+'px',left:'0px',top:'0px'});
   if(!VIEW.crop){VIEW.off=0;cv.style.transform='';}
   document.documentElement.style.setProperty('--s',Math.min(s,vw/W));
-  dlg.style.bottom=bottom+'px';ch.style.bottom=(bottom+dlg.offsetHeight+10)+'px';
+  // 세로 화면: 게임 화면 → 초상화 → 대사창을 위에서부터 붙여 배치 (대사창이 너무 아래로 가지 않게)
+  let pTop=0,pBust=0;
+  if(mode==='port'){const stageTop=vt+vH+8,stageBot=vh-sab-12,dhMax=150;
+    pBust=Math.max(90,Math.min(230,stageBot-stageTop-dhMax+12));pTop=stageTop+pBust-12;
+    dlg.style.top=pTop+'px';dlg.style.bottom='auto';ch.style.bottom='auto';{const chH=ch.offsetHeight,below=pTop+dlg.offsetHeight+8;ch.style.top=(below+chH>vh-sab-8?Math.max(vt+vH+8,pTop-chH-8):below)+'px';}VIEW.pTop=pTop;VIEW.pBust=pBust;VIEW.stageTop=stageTop;}
+  else{dlg.style.top='auto';dlg.style.bottom=bottom+'px';ch.style.top='auto';ch.style.bottom=(bottom+dlg.offsetHeight+10)+'px';}
   // 초상화: 빈 공간이 넉넉하면 대사창 위에 크게, 아니면 대사창 안에 작게
   if(bu){const dh=dlg.offsetHeight||150,dr=dlg.getBoundingClientRect();
     // 초상화는 항상 크게: 대사창 위에 서 있는 형태 (가로 휴대폰은 대사창 왼쪽에 걸쳐 섬)
     document.body.classList.remove('bthumb');
     let bh,left,bot;
-    if(mode==='port'){const free=(vh-bottom-dh)-(vt+vH+8);bh=Math.max(90,Math.min(free+10,240));left=dr.left+10;bot=bottom+dh-12;document.documentElement.style.setProperty('--bustW','0px');}
+    if(mode==='port'){bh=VIEW.pBust;left=dr.left+10;bot=vh-VIEW.pTop-12;document.documentElement.style.setProperty('--bustW','0px');}
     else if(mode==='land'){bh=Math.min(vh*.62,260);const bw=bh*300/380;left=Math.max(6,sal+4);bot=bottom;document.documentElement.style.setProperty('--bustW',Math.max(0,bw-(dr.left-left)+8)+'px');}
     else{bh=Math.min(Math.max(150,vh-bottom-dh-40),Math.min(260,vh*.4));left=dr.left+12;bot=bottom+dh-8;document.documentElement.style.setProperty('--bustW','0px');}
     bu.style.height=bh+'px';bu.style.left=left+'px';bu.style.bottom=bot+'px';
