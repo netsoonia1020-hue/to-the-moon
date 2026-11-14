@@ -2,7 +2,8 @@
 html,body{margin:0;height:100%;background:#05060a;overflow:hidden;color:#eee;
   font-family:"Noto Sans KR","Apple SD Gothic Neo","Malgun Gothic","Nanum Gothic",sans-serif;
   -webkit-user-select:none;user-select:none;touch-action:none;-webkit-tap-highlight-color:transparent}
-#c{position:absolute;background:#000;image-rendering:pixelated}
+#view{position:absolute;overflow:hidden;background:#000}
+#c{position:absolute;left:0;top:0;background:#000;image-rendering:pixelated;will-change:transform}
 .hidden{display:none!important}
 #dialog{position:absolute;left:50%;transform:translateX(-50%);bottom:18px;width:min(94vw,920px);box-sizing:border-box;
   background:linear-gradient(180deg,rgba(16,18,36,.95),rgba(6,8,18,.97));border:1px solid rgba(255,255,255,.28);border-radius:14px;padding:18px 26px 22px;
@@ -186,3 +187,81 @@ body.talking #tlbar{opacity:.55}
 .tln span.now{background:#9fd3a8}.tln span.mem{background:#f2c46d}
 
 #bust{transition:filter 1.8s ease}
+
+/* ===== 기기별 배치 ===== */
+:root{--sat:env(safe-area-inset-top,0px);--sab:env(safe-area-inset-bottom,0px);--sal:env(safe-area-inset-left,0px);--sar:env(safe-area-inset-right,0px)}
+#gear{top:calc(8px + env(safe-area-inset-top,0px));right:calc(10px + env(safe-area-inset-right,0px))}
+#opts{top:calc(52px + env(safe-area-inset-top,0px));right:calc(10px + env(safe-area-inset-right,0px))}
+#tA{bottom:calc(24px + env(safe-area-inset-bottom,0px));right:calc(18px + env(safe-area-inset-right,0px))}
+/* 대사창 안 작은 초상화 */
+body.bthumb #bust{z-index:6;border-radius:8px;filter:none;transform:none}
+body.bthumb #dialog.withbust{padding-left:calc(var(--bustW) + 8px)}
+body:not(.bthumb) #dialog.withbust{padding-left:26px}
+/* 세로 화면: 위쪽 줄(시간 표시줄·설정), 게임, 아래 줄(수집 현황·목표), 대사창 */
+body.portrait #tlbar{background:rgba(6,8,18,.7)}
+body.portrait #hud{text-align:center;font-size:13px;line-height:1.5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+body.portrait #hud i{font-style:normal;color:#667;margin:0 8px}
+body.portrait #goal{max-width:100vw;font-size:13px;background:none;border-left:none;text-align:center;width:100vw;padding:2px 10px;box-sizing:border-box}
+body.portrait #dialog{padding:14px 18px 18px;min-height:5.4em;font-size:16.5px;line-height:1.7}
+/* 가로 휴대폰: 작게, 덜 가리게 */
+body.phoneland #dialog{padding:10px 16px 12px;min-height:4.2em;font-size:15px;line-height:1.6}
+body.phoneland #dname{margin-bottom:2px}
+body.phoneland #hud{font-size:12px}
+#tlbar.mini .tlt{display:none}
+#tlbar.mini .tln{margin-top:0;white-space:normal;max-width:96px;font-size:11px;line-height:1.5}
+#tlbar.mini #tlTag{display:block!important;width:max-content;margin:0 0 2px!important}
+body.phoneland #goal{font-size:12px}
+body.phoneland #tA{width:70px;height:70px;font-size:14px}
+/* 패널은 화면보다 길면 스크롤 */
+.panel{max-height:calc(100vh - 24px);overflow:auto}
+/* 인물 소개 카드: 세로 화면에선 위아래로 */
+@media (orientation:portrait){
+  #intro{flex-direction:column;gap:3vh;padding:0 7vw;background:rgba(0,0,0,.88)}
+  #inPort{height:min(42vh,420px)}
+  #intro .it{max-width:88vw;text-align:center}
+  #inDesc{font-size:15px}
+}
+@media (max-height:540px) and (orientation:landscape){
+  #inPort{height:78vh}
+  #inName{font-size:34px}
+}
+#tlbar.mini .tln{word-break:keep-all}
+
+/* ===== UI 크기 축소 (시점창 · 대사창 · 소개 사진) ===== */
+#tlbar{padding:4px 8px 4px;border-radius:8px}
+.tlt i{width:clamp(14px,1.8vw,20px)}
+.tlt b{width:6px;height:6px}
+.tlt b.on{width:9px;height:9px}
+.tlt b em{font-size:8px;top:7px}
+.tlt b.on em{top:9px}
+.tln{margin-top:12px;font-size:clamp(10px,calc(var(--s)*3.4px),12px)}
+#dialog{font-size:clamp(15px,calc(var(--s)*5.6px),21px);padding:13px 20px 16px;min-height:5em;line-height:1.65;width:min(92vw,820px)}
+body.portrait #dialog{font-size:15.5px;padding:12px 16px 15px;min-height:4.8em}
+#inPort{height:min(50vh,360px)}
+#inName{font-size:clamp(28px,4.6vw,48px)}
+@media (orientation:portrait){#inPort{height:min(32vh,300px)}}
+@media (max-height:540px) and (orientation:landscape){#inPort{height:64vh}}
+
+/* 대화 중: 조사 버튼 숨김 (대사창을 눌러 넘김) */
+body.talking #tA{opacity:0;pointer-events:none}
+#tA{transition:opacity .2s}
+/* 가로 휴대폰: 초상화가 대사창 왼쪽에 걸쳐 서고, 글자는 그 오른쪽 */
+body.bland #bust{z-index:6}
+body.bland #dialog.withbust{padding-left:calc(var(--bustW) + 14px)}
+/* 인물 소개 카드: 남은 높이에 맞춰 줄어들어 잘리지 않게 */
+#intro{box-sizing:border-box;padding-top:calc(16px + env(safe-area-inset-top,0px));padding-bottom:calc(16px + env(safe-area-inset-bottom,0px));overflow:hidden}
+@media (orientation:portrait){
+  #inPort{height:auto;width:min(60vw,240px);max-height:38vh;object-fit:contain}
+  #intro .it{max-width:90vw}
+  #inName{font-size:clamp(26px,8vw,40px);margin-bottom:8px}
+  #inRole{font-size:12px;letter-spacing:.2em;margin-bottom:6px}
+  #inDesc{font-size:14px;line-height:1.65;padding-top:10px}
+}
+@media (orientation:portrait) and (max-height:700px){#inPort{max-height:32vh}#intro{gap:2vh}}
+@media (orientation:landscape) and (max-height:540px){
+  #intro{gap:5vw}
+  #inPort{height:min(70vh,300px)}
+  #intro .it{max-width:52vw}
+  #inName{font-size:30px;margin-bottom:6px}
+  #inDesc{font-size:14px;line-height:1.6;padding-top:8px}
+}

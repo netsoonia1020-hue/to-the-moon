@@ -24,22 +24,61 @@ const store={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v)
 const META=Object.assign({ends:[],eggs:[],opt:{snd:true,voice:true},cleared:false},store.get('lhmb_meta',{}));
 function saveMeta(){store.set('lhmb_meta',META);}
 
+// 화면 배치: 세로(휴대폰) · 가로 휴대폰 · PC 를 따로 잡는다
+const VIEW={crop:false,s:3,cw:960,vw:960,off:0,mode:'pc'};
+function safe(n){return parseFloat(getComputedStyle(document.documentElement).getPropertyValue(n))||0;}
 function layout(){
-  const vw=innerWidth,vh=innerHeight,portrait=vh>vw*1.1;let s,l,t;
-  if(portrait){s=vw/W;l=0;t=44;}
-  else{s=Math.min(vw/W,vh/H);l=(vw-W*s)/2;t=(vh-H*s)/2;}
-  Object.assign(cv.style,{width:W*s+'px',height:H*s+'px',left:l+'px',top:t+'px'});
-  document.documentElement.style.setProperty('--s',s);
-  const dlg=$('dialog'),ch=$('choices');let bottom=18;
-  if(isTouch){bottom=portrait?132:10;dlg.style.width=portrait?'94vw':'min(68vw,780px)';}
+  const vw=innerWidth,vh=innerHeight,portrait=vh>vw*1.1,phoneLand=!portrait&&vh<540&&isTouch;
+  const sat=safe('--sat'),sab=safe('--sab'),sal=safe('--sal'),sar=safe('--sar');
+  const mode=portrait?'port':phoneLand?'land':'pc';VIEW.mode=mode;
+  document.body.classList.toggle('portrait',portrait);document.body.classList.toggle('phoneland',phoneLand);
+  const dlg=$('dialog'),ch=$('choices'),view=$('view'),bu=$('bust'),go=$('goal'),hd=$('hud'),tb=$('tlbar'),to=$('toast');
+  let s,vl,vt,vW,vH,bottom;
+  if(mode==='port'){
+    const talk=document.body.classList.contains('talking');bottom=sab+(isTouch&&!talk?118:12);
+    const topBar=sat+50,hudRow=50,dlgEst=150;
+    s=vw/W;const gH=H*s;
+    vl=0;vt=topBar;vW=vw;vH=gH;
+    dlg.style.width='94vw';
+    tb.style.top=(sat+8)+'px';tb.style.left='10px';
+    hd.style.top=(vt+vH+4)+'px';hd.style.right='12px';hd.style.left='12px';
+    go.style.left='0px';go.style.top=(vt+vH+26)+'px';
+    to.style.top=(vt+8)+'px';to.style.left='12px';
+  }else{
+    s=Math.min((vw-sal-sar)/W,vh/H);vW=W*s;vH=H*s;vl=(vw-vW)/2;vt=(vh-vH)/2;
+    bottom=mode==='land'?Math.max(6,sab):18;
+    dlg.style.width=mode==='land'?`${Math.round(Math.min(vW-24,vw-2*(isTouch?110:20),900))}px`:'min(94vw,920px)';
+    const side=vl-Math.max(sal,sar);
+    tb.style.top=(vt+8)+'px';tb.style.left=(mode==='land'&&side>=100?Math.max(8,sal+6):vl+10)+'px';
+    hd.style.top=(vt+(mode==='land'?50:52))+'px';hd.style.left='';hd.style.right=(mode==='land'&&side>=100?Math.max(10,sar+8):vl+10)+'px';
+    go.style.left=Math.max(0,vl)+'px';go.style.top=(vt+vH-34)+'px';
+    to.style.top=(vt+66)+'px';to.style.left=(vl+12)+'px';
+    tb.classList.toggle('mini',mode==='land');
+  }
+  VIEW.s=s;VIEW.cw=W*s;VIEW.vw=vW;VIEW.crop=VIEW.cw>vW+1;
+  Object.assign(view.style,{left:vl+'px',top:vt+'px',width:vW+'px',height:vH+'px'});
+  Object.assign(cv.style,{width:W*s+'px',height:H*s+'px',left:'0px',top:'0px'});
+  if(!VIEW.crop){VIEW.off=0;cv.style.transform='';}
+  document.documentElement.style.setProperty('--s',Math.min(s,vw/W));
   dlg.style.bottom=bottom+'px';ch.style.bottom=(bottom+dlg.offsetHeight+10)+'px';
-  document.body.classList.toggle('portrait',portrait);
-  const bu=$('bust');if(bu){const bh=portrait?Math.min(vh*.26,260):Math.min(Math.max(170,vh*.42),400);bu.style.height=bh+'px';
-    const dr=dlg.getBoundingClientRect();bu.style.left=(dr.left+14)+'px';bu.style.bottom=(bottom+dlg.offsetHeight-10)+'px';}
-  const go=$('goal');if(go){go.style.left=(portrait?0:Math.max(0,l))+'px';go.style.top=(portrait?t+H*s+6:t+H*s-34)+'px';}
-  const top=Math.max(t+8,52);
-  $('hud').style.top=top+'px';$('toast').style.top=(top+52)+'px';const tb=$('tlbar');tb.style.top=top+'px';tb.style.left=(portrait?10:Math.max(10,l+10))+'px';
-  $('hud').style.right=(portrait?12:Math.max(12,l+10))+'px';$('toast').style.left=(portrait?12:Math.max(12,l+12))+'px';
+  // 초상화: 빈 공간이 넉넉하면 대사창 위에 크게, 아니면 대사창 안에 작게
+  if(bu){const dh=dlg.offsetHeight||150,dr=dlg.getBoundingClientRect();
+    // 초상화는 항상 크게: 대사창 위에 서 있는 형태 (가로 휴대폰은 대사창 왼쪽에 걸쳐 섬)
+    document.body.classList.remove('bthumb');
+    let bh,left,bot;
+    if(mode==='port'){const free=(vh-bottom-dh)-(vt+vH+30);bh=Math.max(150,Math.min(free+40,230));left=dr.left+10;bot=bottom+dh-12;document.documentElement.style.setProperty('--bustW','0px');}
+    else if(mode==='land'){bh=Math.min(vh*.62,260);const bw=bh*300/380;left=Math.max(6,sal+4);bot=bottom;document.documentElement.style.setProperty('--bustW',Math.max(0,bw-(dr.left-left)+8)+'px');}
+    else{bh=Math.min(Math.max(150,vh-bottom-dh-40),Math.min(260,vh*.4));left=dr.left+12;bot=bottom+dh-8;document.documentElement.style.setProperty('--bustW','0px');}
+    bu.style.height=bh+'px';bu.style.left=left+'px';bu.style.bottom=bot+'px';
+    document.body.classList.toggle('bland',mode==='land');}
+}
+// 세로 화면: 게임 화면이 화면보다 넓으면, 서윤(또는 컷신 카메라)을 따라 좌우로 움직인다
+function updateCrop(){
+  if(!VIEW.crop)return;let fx=W/2;
+  if(S&&S.map&&!(CAM.a||CAM.z>1.01)&&!P.hidden)fx=P.fx*TS+8;
+  const t=Math.max(0,Math.min(VIEW.cw-VIEW.vw,fx*VIEW.s-VIEW.vw/2));
+  VIEW.off+=(t-VIEW.off)*.12;if(Math.abs(t-VIEW.off)<.3)VIEW.off=t;
+  cv.style.transform=`translate3d(${-VIEW.off.toFixed(1)}px,0,0)`;
 }
 addEventListener('resize',layout);
 
@@ -357,7 +396,7 @@ async function credits(lines,ms=26000){
   await wait(ms);el.classList.add('hidden');
 }
 const nar=t=>say('',t);
-function hideDialog(){$('dialog').classList.add('hidden');document.body.classList.remove('talking');shutUp();showBust(null);}
+function hideDialog(){$('dialog').classList.add('hidden');document.body.classList.remove('talking');shutUp();showBust(null);layout();}
 // 큰 일러스트 초상화: 대사창 위에 선다
 let bustKey='';
 function showBust(pid,ex){
@@ -365,7 +404,7 @@ function showBust(pid,ex){
   if(!pid||typeof paintPortrait!=='function'||!hasPaint(pid)){b.classList.remove('on');d.classList.remove('withbust');bustKey='';return;}
   const k=pid+ex;if(k!==bustKey){const g=b.getContext('2d');g.clearRect(0,0,300,380);g.drawImage(paintPortrait(pid,ex),0,0);
     if(bustKey){b.classList.remove('swap');void b.offsetWidth;b.classList.add('swap');}bustKey=k;}
-  b.classList.add('on');layout();
+  b.classList.add('on');d.classList.add('withbust');layout();
 }
 function choose(opts){
   return new Promise(res=>{
@@ -424,7 +463,7 @@ function hud(){
   if(F.notes.length){const all=[...F.notes];while(all.length<6)all.push(null);s+='♪ '+all.map(m=>m?NOTE_NAME[m]:'·').join(' ')+'<br>';}
   if(F.keeps.length)s+=`♥ 미래의 조각 ${F.keeps.length}/6<br>`;
   if(F.cats.length)s+=`🐱 ${F.cats.length}/5`;
-  h.innerHTML=s;
+  h.innerHTML=document.body.classList.contains('portrait')?s.replace(/<br>/g,'<i>·</i>').replace(/<i>·<\/i>$/,''):s;
   const g=$('goal');if(g){const t=S?(S.goal?S.goal():(typeof defGoal==='function'&&S.frags?defGoal():'')):'';g.textContent=t?'▸ '+t:'';g.style.opacity=t?1:0;}
 }
 async function addNotes(ns){F.notes.push(...ns);hud();SFX.chime();sparkFx(P.fx*TS+8,P.fy*TS,14);toast('♪ 음의 조각을 얻었다 — '+ns.map(m=>NOTE_NAME[m]).join(' · '),4500);await wait(900);}
@@ -634,4 +673,4 @@ let ftAvg=16;
 function frame(ts){
   if(started)applyTone();const raw=ts-last,dt=Math.min(.05,raw/1000);last=ts;
   if(raw<200){ftAvg=ftAvg*.97+raw*.03;if(!LOWFX&&ftAvg>24){LOWFX=true;}}
-  update(dt);draw();requestAnimationFrame(frame);}
+  update(dt);draw();updateCrop();requestAnimationFrame(frame);}
