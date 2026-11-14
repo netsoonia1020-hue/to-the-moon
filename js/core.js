@@ -519,7 +519,7 @@ async function restore(sv){
   loadScene(sv.scene);
   if(sv.pos){const [x,y,d]=sv.pos;if(!solidAt(x,y)||!ents.length)Object.assign(P,{x,y,fx:x,fy:y,tx:x,ty:y,dir:d||'down'});}
   await setOp($('fader'),0,700);$('fader').style.background='#fff';
-  toast('불러왔습니다 — '+(SCENE_LABEL[sv.scene]||''));locked=false;
+  toast('불러왔습니다 — '+(SCENE_LABEL[sv.scene]||''));locked=false;if(typeof pendingFinale==='function')run(pendingFinale);
 }
 function openSaves(mode){ // mode: 'game'(저장+불러오기) | 'load'(불러오기만)
   return new Promise(res=>{
@@ -567,6 +567,7 @@ async function goScene(name,cardHtml,{white=true,hold=2600}={}){
   if(S.title)toast(S.title);
   locked=false;
   if(S.enter)await run(S.enter);
+  if(typeof pendingFinale==='function')await run(pendingFinale);
 }
 
 /* =========================================================

@@ -358,3 +358,11 @@ const INTER={
   letterbox(false);
  },
 };
+
+/* 이어하기 안전장치: 조각은 다 모았는데 마지막 장면이 끝나기 전에 저장된 경우, 그 장면을 다시 보여 준다 */
+const DONE_FLAG={m25:'m25done',m19:'m19done',m08:'m08done',m98:'m98done',mstorm:'stdone',mboat:'btdone',m85:'m85done',m78:'m78done',m76:'phase1'};
+async function pendingFinale(){
+  if(!S||!S.frags||!S.finale)return;const f=DONE_FLAG[sceneName];
+  if(!f||F[f]||!S.frags.every(k=>F[k]))return;
+  await wait(500);letterbox(true);await S.finale();letterbox(false);cam(null);hud();
+}

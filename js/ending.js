@@ -305,7 +305,7 @@ async function startGame(mode,sv){
   locked=true;
   if(mode==='cont'){resetF(sv.F);F.catMode=cm;await cardShow('<p>이어서…</p>',800);loadScene(sv.scene);
     if(sv.pos){const [x,y,d]=sv.pos;if(!solidAt(x,y))Object.assign(P,{x,y,fx:x,fy:y,tx:x,ty:y,dir:d||'down'});}
-    await wait(600);await cardHide(1000);if(S.title)toast(S.title);locked=false;if(S.enter)await run(S.enter);return;}
+    await wait(600);await cardHide(1000);if(S.title)toast(S.title);locked=false;if(S.enter)await run(S.enter);if(typeof pendingFinale==='function')await run(pendingFinale);return;}
   if(mode==='after'){const b=META.best||{};resetF({introDone:true,phase1:true,stdone:true,notes:PZ_ANS.slice(),keeps:(b.keeps||[]).slice(),cats:(b.cats||[]).slice(),catMode:cm});
     await goScene('present','<h1>에필로그</h1><p>기억에서 돌아온 뒤, 한정우의 집</p>',{white:false,hold:1800});return;}
   resetF({catMode:cm});store.del('lhmb_save');
