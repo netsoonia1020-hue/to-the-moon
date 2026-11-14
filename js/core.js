@@ -229,6 +229,7 @@ function pickVoice(){
 if(TTS.ok){pickVoice();try{speechSynthesis.onvoiceschanged=pickVoice;}catch(e){}}
 const VOICE={'':{p:.9,r:.9},'서윤':{p:1.15,r:1},'정우':{p:.55,r:.88},'은하':{p:1.35,r:.95},'미래':{p:1.25,r:1.02}};
 function speak(name,text){
+  return; // 나레이션 음성은 사용하지 않는다
   if(!TTS.ok||!META.opt.voice||!META.opt.snd)return;
   try{
     speechSynthesis.cancel();if(!TTS.voice)pickVoice();if(!TTS.voice)return;
@@ -241,7 +242,7 @@ function speak(name,text){
 }
 function shutUp(){try{TTS.ok&&speechSynthesis.cancel();}catch(e){}}
 function syncOpts(){
-  $('oSnd').classList.toggle('off',!META.opt.snd);$('oVoice').classList.toggle('off',!META.opt.voice);
+  $('oSnd').classList.toggle('off',!META.opt.snd);
   if(A.master)A.master.gain.value=META.opt.snd?1:0;if(!META.opt.voice||!META.opt.snd)shutUp();
 }
 // 설정 버튼(우측 상단): 누르면 소리·음성·저장·일지 메뉴가 펼쳐진다
@@ -249,8 +250,7 @@ function gearOpen(on){$('opts').classList.toggle('hidden',!on);$('gear').classLi
 $('gear').onclick=e=>{e.stopPropagation();audioInit();gearOpen($('opts').classList.contains('hidden'));};
 addEventListener('pointerdown',e=>{if(!e.target.closest('#opts,#gear'))gearOpen(false);},true);
 $('oSnd').onclick=e=>{e.stopPropagation();META.opt.snd=!META.opt.snd;saveMeta();audioInit();syncOpts();if(META.opt.snd){SFX.chime();toast('소리 켜짐 — 안 들리면 기기 음량·무음 스위치를 확인하세요');}};
-$('oVoice').onclick=e=>{e.stopPropagation();META.opt.voice=!META.opt.voice;saveMeta();syncOpts();
-  if(META.opt.voice){pickVoice();if(!TTS.ok||!TTS.voice)toast('이 기기·브라우저에는 한국어 낭독 음성이 없어요');else speak('','음성 낭독을 켰습니다.');}};
+
 
 /* =========================================================
    게임 상태
@@ -500,7 +500,10 @@ function loadScene(name){
 const SCENE_LABEL={present:'현재 · 한정우의 집',m25:'제1장 · 2026 요양원',m19:'제2장 · 2019 등대 관리실',m08:'제3장 · 2008 예식장 앞',m98:'제4장 · 1998 병실',mstorm:'제5장 · 1998 폭풍의 등대',mboat:'제6장 · 서윤의 장',m85:'제7장 · 1989 등명실',m78:'제8장 · 1978 결혼식',m76:'제9장 · 1976 해변'};
 function snapshot(){return {v:2,scene:sceneName,F:JSON.parse(JSON.stringify(F)),pos:[P.x,P.y,P.dir],t:Date.now()};}
 function canSave(){return started&&S&&S.map&&SCENE_LABEL[sceneName]&&!F.ended;}
-function autosave(){if(canSave()&&!locked)store.set('lhmb_save',snapshot());}
+function autosave(force){if(canSave()&&(force||!locked))store.set('lhmb_save',snapshot());}
+addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')autosave(true);});
+addEventListener('pagehide',()=>autosave(true));
+setInterval(()=>autosave(true),15000);
 function storageOK(){try{localStorage.setItem('lhmb_t','1');localStorage.removeItem('lhmb_t');return true;}catch(e){return false;}}
 function saveLabel(sv){
   if(!sv)return '<b>비어 있음</b>';

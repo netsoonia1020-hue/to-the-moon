@@ -286,7 +286,7 @@ async function ending5(){
    ========================================================= */
 function buildMenu(){
   const el=$('menu');el.innerHTML='';const items=[['처음부터',()=>startGame('new')]];
-  const sv=store.get('lhmb_save',null);if(sv&&SC[sv.scene])items.unshift(['이어하기',()=>startGame('cont',sv)]);
+  const sv=store.get('lhmb_save',null);if(sv&&SC[sv.scene])items.unshift([`이어하기 — ${(typeof SCENE_LABEL!=='undefined'&&SCENE_LABEL[sv.scene])||''}`,()=>startGame('cont',sv)]);
   const anySlot=['s1','s2','s3'].some(k=>store.get('lhmb_slot_'+k,null));
   const openLoad=async()=>{menu=null;const pick=await openSaves('load');if(pick)startGame('cont',pick);else buildMenu();};
   if(anySlot)items.splice(sv&&SC[sv.scene]?1:0,0,['불러오기',openLoad]);
