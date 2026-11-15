@@ -105,7 +105,8 @@ SC.mstorm={pal:'lamp',memory:true,title:'기억 · 1998년 11월 13일 새벽 ·
   lights(){return [{x:160,y:94,r:130,c:'255,235,170',lit:1},{x:232,y:56,r:34,c:'120,255,140'}];},
   ents(){return [
     ...[3,8,13].map(x=>E({kind:'window',x,y:1,w:2,view:'storm',layer:0,wallDeco:true,on:async()=>{await nar('유리창이 바람에 덜컹거린다. 바깥은 먹물처럼 캄캄하다. 바다와 하늘의 경계가 보이지 않는다.');}})),
-    E({id:'lens',kind:'lens',x:9,y:5,w:2,h:2,zb:-.4,glow:!F.st_lens,on:frag('st_lens',async()=>{
+    E({id:'lens',kind:'lens',x:9,y:5,w:2,h:2,zb:-.4,glow:!F.st_lens,on:frag('st_lens',async(e,again)=>{
+      if(again){await nar('렌즈가 말끔하다. 소금 한 톨 없이 빛을 받아낼 준비가 되어 있다.');return;}
       await nar('거대한 렌즈가 하얀 소금 막으로 뒤덮여 있다.');
       await say('정우','…역시. 바람에 소금이 다 들러붙었어.','angry');
       await say('정우','이래서야 불을 켜도 반도 못 나가.');
@@ -114,7 +115,8 @@ SC.mstorm={pal:'lamp',memory:true,title:'기억 · 1998년 11월 13일 새벽 ·
       const s=ent('salt');if(s)s.hidden=true;sparkFx(176,90,20,'240,248,255');
       await say('정우','됐다…! 이제 빛이 나갈 수 있어.','smile');})}),
     E({id:'salt',kind:'salt',x:9,y:5,w:2,layer:2,solid:false,hidden:!!F.st_lens}),
-    E({id:'weight',kind:'weight',x:5,y:4,glow:!F.st_crank,on:frag('st_crank',async e=>{
+    E({id:'weight',kind:'weight',x:5,y:4,glow:!F.st_crank,on:frag('st_crank',async(e,again)=>{
+      if(again){await nar('추는 꼭대기까지 감겨 있다. 렌즈가 천천히 돌기 시작했다.');return;}
       await nar('렌즈를 돌리는 시계추가 바닥까지 내려와 있다. 정전이다. 사람이 손으로 감아 올려야 한다.');
       await say('정우','하나… 둘…! 이 추가 다 풀리기 전에 불빛이 돌아야 해.');
       hideDialog();
@@ -122,7 +124,8 @@ SC.mstorm={pal:'lamp',memory:true,title:'기억 · 1998년 11월 13일 새벽 ·
       await mashGame('추 감아 올리기','무거운 추를 끝까지 감아 올린다.<br><b>멈추면 다시 내려간다.</b> 계속 연타하세요.',{btn:'감기',gain:.055,decay:.22});
       clearInterval(iv);
       await say('정우','후우…','closed');})}),
-    E({id:'radio',kind:'radio',x:14,y:3,glow:!F.st_radio,on:frag('st_radio',async()=>{
+    E({id:'radio',kind:'radio',x:14,y:3,glow:!F.st_radio,on:frag('st_radio',async(e,again)=>{
+      if(again){await nar('무전기 너머에서 해진호의 목소리가 끊어질 듯 이어진다.');return;}
       await nar('무전기가 잡음만 토해 낸다. 주파수가 폭풍에 흔들리고 있다.');
       await say('정우','해진호… 해진호, 들립니까. 여기는 등불리.');
       hideDialog();await tuneGame('주파수 맞추기','잡음 너머의 목소리를 찾는다.<br><b>◀ ▶ 로 바늘을 움직여</b> 초록 신호가 가득 찰 때 잠시 멈추세요.');
